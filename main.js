@@ -49,7 +49,7 @@ function init() {
 
     const terrainMaterial = new THREE.MeshStandardMaterial({
         displacementMap: heightMap,
-        displacementScale: 200,
+        displacementScale: 5,
         roughness: 1.0,
         metalness: 0.2,
     });
@@ -67,9 +67,7 @@ function init() {
         {
             textureWidth: 512,
             textureHeight: 512,
-            waterNormals: textureLoader.load('textures/waternormals.jpg', function (texture) {
-                texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-            }),
+            waterNormals: textureLoader.load('textures/waternormals.jpg', function (texture) {texture.wrapS = texture.wrapT = THREE.RepeatWrapping;}),
             sunDirection: new THREE.Vector3(),
             sunColor: 0xffffff,
             waterColor: 0x001e0f,
@@ -120,6 +118,7 @@ function init() {
         // Update sky and water sun positions
         sky.material.uniforms['sunPosition'].value.copy(sun);
         water.material.uniforms['sunDirection'].value.copy(sun).normalize();
+
 
         // Update directional light position
         directionalLight.position.copy(sun).multiplyScalar(1000);
