@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>DEM Visualization with Dynamic Shadows</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body { margin: 0; }
+        #container { width: 100%; height: 100vh; overflow: hidden; }
+    </style>
+</head>
+<body>
+
+    <div id="container"></div>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        let container, camera, scene, renderer, mesh;
+        const worldWidth = 256, worldDepth = 256;
+
+        init();
+        animate();
+
+        function init() {
+            container = document.getElementById('container');
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xbfd1e5);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 10, 20000);
+            camera.position.set(2000, 1500, 2000);
+
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 250, 0);
+            controls.update();
+
+            const data = generateHeight(worldWidth, worldDepth);
+            const geometry = new THREE.PlaneGeometry(7500, 7500, worldWidth - 1, worldDepth - 1);
+            geometry.rotateX(-Math.PI / 2);
+
+            const vertices = geometry.attributes.position.array;
+            for (let i = 0, j = 0; i < vertices.length; i += 3, j++) {
+                vertices[i + 1] = data[j] * 10;
+            }
+
+            mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
+                color: 0x556b2f,
+                side: THREE.DoubleSide
+            }));
+            scene.add(mesh);
+
+            const ambientLight = new THREE.AmbientLight(0x555555);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(0, 1000, 0);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function generateHeight(width, height) {
+            const size = width * height;
+            const data = new Uint8Array(size);
+            const perlin = new THREE.ImprovedNoise();
+            let z = Math.random() * 100;
+
+            for (let j = 0; j < 4; j++) {
+                for (let i = 0; i < size; i++) {
+                    const x = i % width, y = ~~(i / width);
+                    data[i] += Math.abs(perlin.noise(x / 100, y / 100, z) * 100);
+                }
+            }
+            return data;
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
