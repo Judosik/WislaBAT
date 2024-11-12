@@ -10,8 +10,8 @@ let camera, scene, renderer;
 let controls, water, sun, terrain, directionalLight;
 
 const parameters = {
-    elevation: 2,
-    azimuth: 180
+    elevation: 4,
+    azimuth: -152
 };
 
 const terrainSize = { width: 2023, height: 2119 }; // Adjust based on DEM image size
@@ -47,17 +47,21 @@ function init() {
     const textureLoader = new THREE.TextureLoader();
     const heightMap = textureLoader.load('terrain_data/dem.png', () => {console.log("Height map loaded");}, undefined, (error) => {console.error("Error loading height map:", error);});
 
+
     const terrainMaterial = new THREE.MeshStandardMaterial({
         displacementMap: heightMap,
-        displacementScale: 5,
-        roughness: 1.0,
+        displacementScale: 10,
+        roughness: 0.8,
         metalness: 0.2,
+        color:0xffffff,
     });
 
     const terrainGeometry = new THREE.PlaneGeometry(200, 200, terrainSize.width - 1, terrainSize.height - 1);
     terrainGeometry.rotateX(-Math.PI / 2);
     terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
     terrain.receiveShadow = true;  // Enable shadow receiving on terrain
+    terrain.castShadow = true;
+
     scene.add(terrain);
 
     // Water setup
@@ -76,7 +80,7 @@ function init() {
         }
     );
     water.rotation.x = - Math.PI / 2;
-    water.position.y = 0.5;  // Adjust based on terrain elevation
+    water.position.y = 1;  // Adjust based on terrain elevation
     scene.add(water);
 
     // Sky setup
