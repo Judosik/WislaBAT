@@ -10,6 +10,7 @@ let container, stats;
 let camera, scene, renderer;
 let controls, water, sun, terrain;
 
+const terrainSize = { width: 2023, height: 2119 }; // Adjust based on DEM image size
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -22,6 +23,7 @@ function init() {
 
     container = document.getElementById('container');
 
+    // Renderer setup
     renderer = new THREE.WebGLRenderer();
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -30,12 +32,12 @@ function init() {
     renderer.toneMappingExposure = 0.5;
     container.appendChild(renderer.domElement);
 
+    // Scene setup
     scene = new THREE.Scene();
 
+    // Camera setup
     camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 1, 20000);
     camera.position.set(30, 100, 150);
-
-    sun = new THREE.Vector3();
 
     // Terrain setup
     const textureLoader = new THREE.TextureLoader();
@@ -43,15 +45,18 @@ function init() {
 
     const terrainMaterial = new THREE.MeshStandardMaterial({
         displacementMap: heightMap,
-        displacementScale: 10,
+        displacementScale: 5,
         roughness: 1.0,
         metalness: 0.2,
     });
 
-    const terrainGeometry = new THREE.PlaneGeometry(200, 200, 2023 - 1, 2119 - 1);
+    const terrainGeometry = new THREE.PlaneGeometry(200, 200, terrainSize.width - 1, terrainSize.height - 1);
     terrainGeometry.rotateX(-Math.PI / 2);
     terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
     scene.add(terrain);
+
+    // Cerate sun
+    sun = new THREE.Vector3();
 
     // Water setup
     const waterGeometry = new THREE.PlaneGeometry(10000, 10000);
@@ -71,7 +76,7 @@ function init() {
         }
     );
     water.rotation.x = - Math.PI / 2;
-    water.position.y = 1; // Adjust based on terrain elevation
+    water.position.y = 0.5; // Adjust based on terrain elevation
     scene.add(water);
 
     // Sky setup
