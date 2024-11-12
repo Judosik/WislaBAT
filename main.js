@@ -119,7 +119,6 @@ function init() {
         sky.material.uniforms['sunPosition'].value.copy(sun);
         water.material.uniforms['sunDirection'].value.copy(sun).normalize();
 
-
         // Update directional light position
         directionalLight.position.copy(sun).multiplyScalar(1000);
 
