@@ -10,7 +10,7 @@ let camera, scene, renderer;
 let controls, water, sun, terrain, directionalLight;
 
 const parameters = {
-    elevation: 4,
+    elevation: 26,
     azimuth: -152,
     terrainHeight: 0  // New parameter for terrain elevation control
 };
@@ -153,8 +153,8 @@ function init() {
     folderSky.open();
 
     const folderTerrain = gui.addFolder('Terrain');
-    folderTerrain.add(parameters, 'terrainHeight', -50, 50, 0.1).name('Terrain Height').onChange((value) => {
-        terrain.position.y = value;
+    folderTerrain.add(parameters, 'terrainHeight', -500, 500, 1).name('Terrain Height').onChange((value) => {
+        terrain.position.y = (value-20)/100;
     });
     folderTerrain.open();
 
