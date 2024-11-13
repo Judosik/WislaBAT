@@ -11,7 +11,8 @@ let controls, water, sun, terrain, directionalLight;
 
 const parameters = {
     elevation: 4,
-    azimuth: -152
+    azimuth: -152,
+    terrainHeight: 0  // New parameter for terrain elevation control
 };
 
 const terrainSize = { width: 2023, height: 2119 }; // Adjust based on DEM image size
@@ -47,13 +48,12 @@ function init() {
     const textureLoader = new THREE.TextureLoader();
     const heightMap = textureLoader.load('terrain_data/dem.png', () => {console.log("Height map loaded");}, undefined, (error) => {console.error("Error loading height map:", error);});
 
-
     const terrainMaterial = new THREE.MeshStandardMaterial({
         displacementMap: heightMap,
         displacementScale: 10,
         roughness: 0.8,
         metalness: 0.2,
-        color:0xffffff,
+        color: 0xffffff,
     });
 
     const terrainGeometry = new THREE.PlaneGeometry(200, 200, terrainSize.width - 1, terrainSize.height - 1);
@@ -61,7 +61,6 @@ function init() {
     terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
     terrain.receiveShadow = true;  // Enable shadow receiving on terrain
     terrain.castShadow = true;
-
     scene.add(terrain);
 
     // Water setup
@@ -152,6 +151,12 @@ function init() {
     folderSky.add(parameters, 'elevation', 0, 90, 0.1).onChange(updateSun);
     folderSky.add(parameters, 'azimuth', -180, 180, 0.1).onChange(updateSun);
     folderSky.open();
+
+    const folderTerrain = gui.addFolder('Terrain');
+    folderTerrain.add(parameters, 'terrainHeight', -50, 50, 0.1).name('Terrain Height').onChange((value) => {
+        terrain.position.y = value;
+    });
+    folderTerrain.open();
 
     const waterUniforms = water.material.uniforms;
     const folderWater = gui.addFolder('Water');
