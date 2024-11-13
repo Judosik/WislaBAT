@@ -152,11 +152,11 @@ function init() {
     folderSky.add(parameters, 'azimuth', -180, 180, 0.1).onChange(updateSun);
     folderSky.open();
 
-    const folderTerrain = gui.addFolder('Terrain');
+    const folderWaterLvl = gui.addFolder('Water Level');
     folderTerrain.add(parameters, 'waterLevel', -500, 500, 1).name('Water Level').onChange((value) => {
         terrain.position.y = -(value-20)/100;
     });
-    folderTerrain.open();
+    folderfolderWaterLvl.open();
 
     const waterUniforms = water.material.uniforms;
     const folderWater = gui.addFolder('Water');
