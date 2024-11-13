@@ -12,8 +12,7 @@ let controls, water, sun, terrain, directionalLight;
 const parameters = {
     elevation: 4,
     azimuth: -152,
-    terrainHeight: 26,  // Parameter for terrain elevation control
-    waterLevel: 1  // Parameter for water level control
+    waterLevel: 53  // Parameter for water level control
 };
 
 const terrainSize = { width: 2023, height: 2119 }; // Adjust based on DEM image size
@@ -62,7 +61,7 @@ function init() {
     terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
     terrain.receiveShadow = true;  // Enable shadow receiving on terrain
     terrain.castShadow = true;
-    terrain.position.y = 1;
+    terrain.position.y = 0;
     scene.add(terrain);
 
     // Water setup
@@ -157,7 +156,7 @@ function init() {
     // Water level slider
     const folderWaterLvl = gui.addFolder('Water Level');
     folderWaterLvl.add(parameters, 'waterLevel', -500, 500, 1).name('Water Level').onChange((value) => {
-        water.position.y = value/100;
+        water.position.y = (value-53)/100;
     });
     folderWaterLvl.open();
 
