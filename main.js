@@ -15,7 +15,7 @@ const parameters = {
     waterLevel: 53  // Parameter for water level control
 };
 
-const terrainSize = { width: 2023, height: 2119 }; // Adjust based on DEM image size
+let terrainSize = { width: 200, height: 200 }; // Default values, will be updated
 
 init();
 
@@ -27,8 +27,8 @@ function init() {
     renderer = new THREE.WebGLRenderer();
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;  // Enable shadows
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;  // Use soft shadows
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setAnimationLoop(animate);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 0.5;
@@ -44,27 +44,17 @@ function init() {
     // Sun setup
     sun = new THREE.Vector3();
 
-    // Terrain setup
-    const textureLoader = new THREE.TextureLoader();
-    const heightMap = textureLoader.load('terrain_data/dem.png', () => {console.log("Height map loaded");}, undefined, (error) => {console.error("Error loading height map:", error);});
-
-    const terrainMaterial = new THREE.MeshStandardMaterial({
-        displacementMap: heightMap,
-        displacementScale: 10,
-        roughness: 0.8,
-        metalness: 0.2,
-        color: 0x9b7653,
-    });
-
-    const terrainGeometry = new THREE.PlaneGeometry(200, 200, terrainSize.width - 1, terrainSize.height - 1);
-    terrainGeometry.rotateX(-Math.PI / 2);
-    terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
-    terrain.receiveShadow = true;  // Enable shadow receiving on terrain
-    terrain.castShadow = true;
-    terrain.position.y = 0;
-    scene.add(terrain);
+    // Load DEM image and set terrain size
+    const demImage = new Image();
+    demImage.src = 'terrain_data/dem.png';
+    demImage.onload = () => {
+        terrainSize.width = demImage.width;
+        terrainSize.height = demImage.height;
+        setupTerrain(); // Setup terrain after loading DEM dimensions
+    };
 
     // Water setup
+    const textureLoader = new THREE.TextureLoader();
     const waterGeometry = new THREE.PlaneGeometry(10000, 10000);
     water = new Water(
         waterGeometry,
@@ -80,7 +70,7 @@ function init() {
         }
     );
     water.rotation.x = - Math.PI / 2;
-    water.position.y = parameters.waterLevel;  // Set initial water level
+    water.position.y = parameters.waterLevel;
     scene.add(water);
 
     // Sky setup
@@ -94,7 +84,7 @@ function init() {
     skyUniforms['mieCoefficient'].value = 0.005;
     skyUniforms['mieDirectionalG'].value = 0.8;
 
-    // Create the directional light (sunlight) with shadow casting
+    // Create the directional light
     directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
@@ -153,10 +143,9 @@ function init() {
     folderSky.add(parameters, 'azimuth', -180, 180, 0.1).onChange(updateSun);
     folderSky.open();
 
-    // Water level slider
     const folderWaterLvl = gui.addFolder('Water Level');
     folderWaterLvl.add(parameters, 'waterLevel', -500, 500, 1).name('Water Level').onChange((value) => {
-        water.position.y = (value-53)/100;
+        water.position.y = value;
     });
     folderWaterLvl.open();
 
@@ -167,6 +156,27 @@ function init() {
     folderWater.open();
 
     window.addEventListener('resize', onWindowResize);
+}
+
+function setupTerrain() {
+    const textureLoader = new THREE.TextureLoader();
+    const heightMap = textureLoader.load('terrain_data/dem.png', () => { console.log("Height map loaded"); }, undefined, (error) => { console.error("Error loading height map:", error); });
+
+    const terrainMaterial = new THREE.MeshStandardMaterial({
+        displacementMap: heightMap,
+        displacementScale: 10,
+        roughness: 0.8,
+        metalness: 0.2,
+        color: 0x9b7653,
+    });
+
+    // Create terrain geometry based on DEM dimensions
+    const terrainGeometry = new THREE.PlaneGeometry(200, 200, terrainSize.width - 1, terrainSize.height - 1);
+    terrainGeometry.rotateX(-Math.PI / 2);
+    terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
+    terrain.receiveShadow = true;
+    terrain.castShadow = true;
+    scene.add(terrain);
 }
 
 function onWindowResize() {
