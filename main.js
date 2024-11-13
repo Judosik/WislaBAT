@@ -54,7 +54,7 @@ function init() {
         displacementScale: 10,
         roughness: 0.8,
         metalness: 0.2,
-        color: 0xffffff,
+        color: 0x9b7653,
     });
 
     const terrainGeometry = new THREE.PlaneGeometry(200, 200, terrainSize.width - 1, terrainSize.height - 1);
@@ -163,7 +163,7 @@ function init() {
     // Water level slider
     const folderWaterLvl = gui.addFolder('Water Level');
     folderWaterLvl.add(parameters, 'waterLevel', -500, 500, 1).name('Water Level').onChange((value) => {
-        water.position.y = value;
+        water.position.y = value/100;
     });
     folderWaterLvl.open();
 
