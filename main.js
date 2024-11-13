@@ -144,8 +144,8 @@ function init() {
     folderSky.open();
 
     const folderWaterLvl = gui.addFolder('Water Level');
-    folderWaterLvl.add(parameters, 'waterLevel', -500, 500, 1).name('Water Level').onChange((value) => {
-        water.position.y = value;
+    folderWaterLvl.add(parameters, 'waterLevel', -500, 500, 1).name('water level (cm)').onChange((value) => {
+        water.position.y = (value-53)/100;
     });
     folderWaterLvl.open();
 
