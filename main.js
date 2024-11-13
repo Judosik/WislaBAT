@@ -62,6 +62,7 @@ function init() {
     terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
     terrain.receiveShadow = true;  // Enable shadow receiving on terrain
     terrain.castShadow = true;
+    terrain.position.y = 1;
     scene.add(terrain);
 
     // Water setup
@@ -152,13 +153,6 @@ function init() {
     folderSky.add(parameters, 'elevation', 0, 90, 0.1).onChange(updateSun);
     folderSky.add(parameters, 'azimuth', -180, 180, 0.1).onChange(updateSun);
     folderSky.open();
-
-    // Terrain height slider
-    const folderTerrain = gui.addFolder('Terrain');
-    folderTerrain.add(parameters, 'terrainHeight', -50, 50, 0.1).name('Terrain Height').onChange((value) => {
-        terrain.position.y = value;
-    });
-    folderTerrain.open();
 
     // Water level slider
     const folderWaterLvl = gui.addFolder('Water Level');
