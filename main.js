@@ -12,7 +12,8 @@ let controls, water, sun, terrain, directionalLight;
 const parameters = {
     elevation: 4,
     azimuth: -152,
-    terrainHeight: 26  // New parameter for terrain elevation control
+    terrainHeight: 26,  // Parameter for terrain elevation control
+    waterLevel: 1  // Parameter for water level control
 };
 
 const terrainSize = { width: 2023, height: 2119 }; // Adjust based on DEM image size
@@ -79,7 +80,7 @@ function init() {
         }
     );
     water.rotation.x = - Math.PI / 2;
-    water.position.y = 1;  // Adjust based on terrain elevation
+    water.position.y = parameters.waterLevel;  // Set initial water level
     scene.add(water);
 
     // Sky setup
@@ -152,11 +153,19 @@ function init() {
     folderSky.add(parameters, 'azimuth', -180, 180, 0.1).onChange(updateSun);
     folderSky.open();
 
-    const folderWaterLvl = gui.addFolder('Water Level');
-    folderTerrain.add(parameters, 'waterLevel', -500, 500, 1).name('Water Level').onChange((value) => {
-        terrain.position.y = -(value-20)/100;
+    // Terrain height slider
+    const folderTerrain = gui.addFolder('Terrain');
+    folderTerrain.add(parameters, 'terrainHeight', -50, 50, 0.1).name('Terrain Height').onChange((value) => {
+        terrain.position.y = value;
     });
-    folderfolderWaterLvl.open();
+    folderTerrain.open();
+
+    // Water level slider
+    const folderWaterLvl = gui.addFolder('Water Level');
+    folderWaterLvl.add(parameters, 'waterLevel', -500, 500, 1).name('Water Level').onChange((value) => {
+        water.position.y = value;
+    });
+    folderWaterLvl.open();
 
     const waterUniforms = water.material.uniforms;
     const folderWater = gui.addFolder('Water');
