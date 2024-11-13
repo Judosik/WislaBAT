@@ -10,9 +10,9 @@ let camera, scene, renderer;
 let controls, water, sun, terrain, directionalLight;
 
 const parameters = {
-    elevation: 26,
+    elevation: 4,
     azimuth: -152,
-    terrainHeight: 0  // New parameter for terrain elevation control
+    terrainHeight: 26  // New parameter for terrain elevation control
 };
 
 const terrainSize = { width: 2023, height: 2119 }; // Adjust based on DEM image size
