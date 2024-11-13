@@ -153,8 +153,8 @@ function init() {
     folderSky.open();
 
     const folderTerrain = gui.addFolder('Terrain');
-    folderTerrain.add(parameters, 'terrainHeight', -500, 500, 1).name('Terrain Height').onChange((value) => {
-        terrain.position.y = (value-20)/100;
+    folderTerrain.add(parameters, 'waterLevel', -500, 500, 1).name('Water Level').onChange((value) => {
+        terrain.position.y = -(value-20)/100;
     });
     folderTerrain.open();
 
