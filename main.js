@@ -12,7 +12,7 @@ let controls, water, sun, terrain, directionalLight;
 const parameters = {
     elevation: 4,
     azimuth: -152,
-    waterLevel: 53  // Parameter for water level control
+    waterLevel: 1  // Parameter for water level control
 };
 
 let terrainSize = { width: 200, height: 200 }; // Default values, will be updated
@@ -145,7 +145,7 @@ function init() {
 
     const folderWaterLvl = gui.addFolder('Water Level');
     folderWaterLvl.add(parameters, 'waterLevel', -500, 500, 1).name('water level (cm)').onChange((value) => {
-        water.position.y = (value-53)/100;
+        water.position.y = (value+115)/100;
     });
     folderWaterLvl.open();
 
