@@ -12,7 +12,7 @@ let controls, water, sun, terrain, directionalLight;
 const parameters = {
     elevation: 4,
     azimuth: -152,
-    waterLevel: 1  // Parameter for water level control
+    waterLevel: 0.7  // Parameter for water level control
 };
 
 let terrainSize = { width: 200, height: 200 }; // Default values, will be updated
@@ -145,7 +145,7 @@ function init() {
 
     const folderWaterLvl = gui.addFolder('Water Level');
     folderWaterLvl.add(parameters, 'waterLevel', -5, 5, 0.01).name('water level (cm)').onChange((value) => {
-        water.position.y = (value+1.15);
+        water.position.y = (value);
     });
     folderWaterLvl.open();
 
@@ -164,7 +164,7 @@ function setupTerrain() {
 
     const terrainMaterial = new THREE.MeshStandardMaterial({
         displacementMap: heightMap,
-        displacementScale: 10,
+        displacementScale: 5,
         roughness: 0.8,
         metalness: 0.2,
         color: 0x9b7653,
