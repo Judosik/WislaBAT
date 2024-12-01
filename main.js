@@ -144,7 +144,7 @@ function init() {
     folderSky.open();
 
     const folderWaterLvl = gui.addFolder('Water Level');
-    folderWaterLvl.add(parameters, 'waterLevel', -5, 5, 0.01).name('water level (cm)').onChange((value) => {
+    folderWaterLvl.add(parameters, 'waterLevel', -3, 3, 0.01).name('water level (cm)').onChange((value) => {
         water.position.y = (value);
     });
     folderWaterLvl.open();
@@ -161,13 +161,15 @@ function init() {
 function setupTerrain() {
     const textureLoader = new THREE.TextureLoader();
     const heightMap = textureLoader.load('terrain_data/dem.png', () => { console.log("Height map loaded"); }, undefined, (error) => { console.error("Error loading height map:", error); });
+    const diffuseMap = textureLoader.load('terrain_data/orto_phot.png', () => {console.log("Diffusion map loaded");}, undefined, (error) => {console.error("Error loading diffusion map:", error);});
+
 
     const terrainMaterial = new THREE.MeshStandardMaterial({
+        map: diffuseMap,
         displacementMap: heightMap,
-        displacementScale: 5,
+        displacementScale: 7,
         roughness: 0.8,
         metalness: 0.2,
-        color: 0x9b7653,
     });
 
     // Create terrain geometry based on DEM dimensions
