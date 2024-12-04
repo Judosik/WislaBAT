@@ -129,8 +129,8 @@ function init() {
     controls = new OrbitControls(camera, renderer.domElement);
     controls.maxPolarAngle = Math.PI * 0.495;
     controls.target.set(0, 10, 0);
-    controls.minDistance = 40.0;
-    controls.maxDistance = 200.0;
+    controls.minDistance = 10.0;
+    controls.maxDistance = 180.0;
     controls.update();
 
     stats = new Stats();
@@ -167,7 +167,7 @@ function setupTerrain() {
     const terrainMaterial = new THREE.MeshStandardMaterial({
         map: diffuseMap,
         displacementMap: heightMap,
-        displacementScale: 7,
+        displacementScale: 12,
         roughness: 0.8,
         metalness: 0.2,
     });
