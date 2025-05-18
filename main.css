@@ -2,7 +2,7 @@ body {
 	margin: 0;
 	background-color: #000;
 	color: #fff;
-	font-family: Monospace;
+	font-family:'Courier New', Courier, monospace;
 	font-size: 13px;
 	line-height: 24px;
 	overscroll-behavior: none;
@@ -27,6 +27,8 @@ button {
 	top: 0px;
 	width: 100%;
 	padding: 10px;
+	font-family:'Courier New', Courier, monospace;
+	font-size: 18px;
 	box-sizing: border-box;
 	text-align: center;
 	-moz-user-select: none;
@@ -36,6 +38,10 @@ button {
 	pointer-events: none;
 	z-index: 1; /* TODO Solve this in HTML */
 }
+#git{
+	color: rgba(8, 0, 255, 0.965);
+	font-weight: bold;
+}
 
 a, button, input, select {
 	pointer-events: auto;
@@ -43,6 +49,7 @@ a, button, input, select {
 
 .lil-gui {
 	z-index: 2 !important; /* TODO Solve this in HTML */
+	font-family: Arial, Helvetica, sans-serif; 
 }
 
 @media all and ( max-width: 640px ) {
