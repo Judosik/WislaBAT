@@ -38,8 +38,8 @@ function init() {
     scene = new THREE.Scene();
 
     // Camera setup
-    camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 1, 20000);
-    camera.position.set(30, 100, 150);
+    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
+    camera.position.set(30, 120, 130);
 
     // Sun setup
     sun = new THREE.Vector3();
@@ -61,7 +61,7 @@ function init() {
         {
             textureWidth: 512,
             textureHeight: 512,
-            waterNormals: textureLoader.load('textures/waternormals.jpg', function (texture) {texture.wrapS = texture.wrapT = THREE.RepeatWrapping;}),
+            waterNormals: textureLoader.load('textures/waternormals.jpg', function (texture) { texture.wrapS = texture.wrapT = THREE.RepeatWrapping; }),
             sunDirection: new THREE.Vector3(),
             sunColor: 0xffffff,
             waterColor: 0x001e0f,
@@ -158,16 +158,16 @@ function init() {
     window.addEventListener('resize', onWindowResize);
 }
 
-function setupTerrain() {
+async function setupTerrain() {
     const textureLoader = new THREE.TextureLoader();
-    const heightMap = textureLoader.load('terrain_data/dem.png', () => { console.log("Height map loaded"); }, undefined, (error) => { console.error("Error loading height map:", error); });
-    const diffuseMap = textureLoader.load('terrain_data/orto_phot.png', () => {console.log("Diffusion map loaded");}, undefined, (error) => {console.error("Error loading diffusion map:", error);});
+    const heightMap = textureLoader.load('terrain_data/pol_nmt.png', () => { console.log("Height map loaded"); }, undefined, (error) => { console.error("Error loading height map:", error); });
+    const diffuseMap = textureLoader.load('terrain_data/pol_vizka.png', () => { console.log("Diffusion map loaded"); }, undefined, (error) => { console.error("Error loading diffusion map:", error); });
 
 
     const terrainMaterial = new THREE.MeshStandardMaterial({
         map: diffuseMap,
         displacementMap: heightMap,
-        displacementScale: 12,
+        displacementScale: 5,
         roughness: 0.8,
         metalness: 0.2,
     });
