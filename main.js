@@ -12,7 +12,7 @@ let controls, water, sun, terrain, directionalLight;
 const parameters = {
     elevation: 4,
     azimuth: -152,
-    waterLevel: 0.49  // Parameter for water level control
+    waterLevel: 0.54  // Parameter for water level control
 };
 
 let terrainSize = { width: 200, height: 200 }; // Default values, will be updated
