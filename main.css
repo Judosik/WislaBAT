@@ -2,7 +2,7 @@ body {
 	margin: 0;
 	background-color: #000;
 	color: #fff;
-	font-family: Monospace;
+	font-family:'Courier New', Courier, monospace;
 	font-size: 13px;
 	line-height: 24px;
 	overscroll-behavior: none;
@@ -23,10 +23,16 @@ button {
 }
 
 #info {
-	position: absolute;
+	position:absolute;
 	top: 0px;
 	width: 100%;
-	padding: 10px;
+	padding: 12px;
+	font-family:'Courier New', Courier, monospace;
+	text-shadow: 1px 1px 2px #000;
+	background-color: rgba(0, 0, 0, 0.5);
+	border-bottom: 1px solid #444;
+	border-radius: 0 0 10px 10px;
+	font-size: 20px;
 	box-sizing: border-box;
 	text-align: center;
 	-moz-user-select: none;
@@ -36,6 +42,10 @@ button {
 	pointer-events: none;
 	z-index: 1; /* TODO Solve this in HTML */
 }
+#git{
+	color: rgba(138, 134, 255, 0.969);
+	font-weight: bold;
+}
 
 a, button, input, select {
 	pointer-events: auto;
@@ -43,6 +53,7 @@ a, button, input, select {
 
 .lil-gui {
 	z-index: 2 !important; /* TODO Solve this in HTML */
+	font-family: Arial, Helvetica, sans-serif; 
 }
 
 @media all and ( max-width: 640px ) {
@@ -68,7 +79,7 @@ a, button, input, select {
 	align-items: center;
 	justify-content: center;
 	flex-direction: column;
-	background: rgba(0,0,0,0.7);
+	
 }
 
 	#overlay button {
