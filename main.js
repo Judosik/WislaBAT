@@ -1,198 +1,104 @@
-import * as THREE from 'three';
-import Stats from 'three/addons/libs/stats.module.js';
-import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Water } from 'three/addons/objects/Water.js';
-import { Sky } from 'three/addons/objects/Sky.js';
+// main.js
 
-let container, stats;
-let camera, scene, renderer;
-let controls, water, sun, terrain, directionalLight;
+import * as THREE from "three";
+import { CONFIG, parameters } from "./src/config.js";
+import { setupScene, setupWindowResize } from "./src/setupScene.js";
+import { loadTerrain } from "./src/loadTerrain.js";
+import {
+  createWater,
+  createSky,
+  setupControls,
+  setupGUI,
+  updateWater,
+  updateSun,
+} from "./src/setupUI.js";
 
-const parameters = {
-    elevation: 4,
-    azimuth: -152,
-    waterLevel: 0.54  // Parameter for water level control
+// Global objects
+let app = {
+  scene: null,
+  camera: null,
+  renderer: null,
+  controls: null,
+  water: null,
+  sky: null,
+  directionalLight: null,
+  sun: null,
+  terrain: null,
+  stats: null,
+  clock: new THREE.Clock(),
 };
 
-let terrainSize = { width: 200, height: 200 }; // Default values, will be updated
+/**
+ * Main initialization
+ */
+async function init() {
+  const container = document.getElementById("container");
 
-init();
+  // Step 1: Setup core Three.js
+  console.log("Inicjowanie sceny...");
+  const sceneSetup = setupScene(container);
+  app.scene = sceneSetup.scene;
+  app.camera = sceneSetup.camera;
+  app.renderer = sceneSetup.renderer;
+  app.directionalLight = sceneSetup.directionalLight;
+  app.sun = sceneSetup.sun;
 
-function init() {
+  // Step 2: Load terrain
+  console.log("Przetwarzanie terenu...");
+  try {
+    app.terrain = await loadTerrain(app.scene);
+  } catch (error) {
+    console.error("Terrain loading failed:", error);
+  }
 
-    container = document.getElementById('container');
+  // Step 3: Create water and sky
+  console.log("Creating water and sky...");
+  app.water = createWater();
+  app.scene.add(app.water);
 
-    // Renderer setup
-    renderer = new THREE.WebGLRenderer();
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.setAnimationLoop(animate);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.5;
-    container.appendChild(renderer.domElement);
+  app.sky = createSky();
+  app.scene.add(app.sky);
 
-    // Scene setup
-    scene = new THREE.Scene();
+  // Step 4: Setup controls
+  console.log("Setting up controls...");
+  app.controls = setupControls(app.camera, app.renderer);
+  setupWindowResize(app.camera, app.renderer);
 
-    // Camera setup
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
-    camera.position.set(30, 120, 130);
+  // Step 5: Setup GUI and stats
+  console.log("Setting up UI...");
+  const { gui, stats } = setupGUI(
+    parameters,
+    app.water,
+    app.sky,
+    app.directionalLight,
+    app.sun,
+    container
+  );
+  app.stats = stats;
 
-    // Sun setup
-    sun = new THREE.Vector3();
+  // Initial sun position
+  updateSun(app.sun, app.sky, app.water, app.directionalLight, parameters);
 
-    // Load DEM image and set terrain size
-    const demImage = new Image();
-    demImage.src = 'terrain_data/dem.png';
-    demImage.onload = () => {
-        terrainSize.width = demImage.width;
-        terrainSize.height = demImage.height;
-        setupTerrain(); // Setup terrain after loading DEM dimensions
-    };
+  console.log("✓ Initialization complete");
 
-    // Water setup
-    const textureLoader = new THREE.TextureLoader();
-    const waterGeometry = new THREE.PlaneGeometry(10000, 10000);
-    water = new Water(
-        waterGeometry,
-        {
-            textureWidth: 512,
-            textureHeight: 512,
-            waterNormals: textureLoader.load('textures/waternormals.jpg', function (texture) { texture.wrapS = texture.wrapT = THREE.RepeatWrapping; }),
-            sunDirection: new THREE.Vector3(),
-            sunColor: 0xffffff,
-            waterColor: 0x001e0f,
-            distortionScale: 3.7,
-            fog: scene.fog !== undefined
-        }
-    );
-    water.rotation.x = - Math.PI / 2;
-    water.position.y = parameters.waterLevel;
-    scene.add(water);
-
-    // Sky setup
-    const sky = new Sky();
-    sky.scale.setScalar(10000);
-    scene.add(sky);
-
-    const skyUniforms = sky.material.uniforms;
-    skyUniforms['turbidity'].value = 10;
-    skyUniforms['rayleigh'].value = 2;
-    skyUniforms['mieCoefficient'].value = 0.005;
-    skyUniforms['mieDirectionalG'].value = 0.8;
-
-    // Create the directional light
-    directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
-    directionalLight.shadow.camera.near = 0.5;
-    directionalLight.shadow.camera.far = 5000;
-    directionalLight.shadow.camera.left = -500;
-    directionalLight.shadow.camera.right = 500;
-    directionalLight.shadow.camera.top = 500;
-    directionalLight.shadow.camera.bottom = -500;
-    scene.add(directionalLight);
-
-    // PMREM for scene environment
-    const pmremGenerator = new THREE.PMREMGenerator(renderer);
-    const sceneEnv = new THREE.Scene();
-
-    let renderTarget;
-
-    function updateSun() {
-        const phi = THREE.MathUtils.degToRad(90 - parameters.elevation);
-        const theta = THREE.MathUtils.degToRad(parameters.azimuth);
-
-        sun.setFromSphericalCoords(1, phi, theta);
-
-        // Update sky and water sun positions
-        sky.material.uniforms['sunPosition'].value.copy(sun);
-        water.material.uniforms['sunDirection'].value.copy(sun).normalize();
-
-        // Update directional light position
-        directionalLight.position.copy(sun).multiplyScalar(1000);
-
-        // Update environment map
-        if (renderTarget !== undefined) renderTarget.dispose();
-        sceneEnv.add(sky);
-        renderTarget = pmremGenerator.fromScene(sceneEnv);
-        scene.add(sky);
-        scene.environment = renderTarget.texture;
-    }
-    updateSun();
-
-    // Orbit controls
-    controls = new OrbitControls(camera, renderer.domElement);
-    controls.maxPolarAngle = Math.PI * 0.495;
-    controls.target.set(0, 10, 0);
-    controls.minDistance = 10.0;
-    controls.maxDistance = 180.0;
-    controls.update();
-
-    stats = new Stats();
-    container.appendChild(stats.dom);
-
-    // GUI setup
-    const gui = new GUI();
-    const folderSky = gui.addFolder('Sky');
-    folderSky.add(parameters, 'elevation', 0, 90, 0.1).onChange(updateSun);
-    folderSky.add(parameters, 'azimuth', -180, 180, 0.1).onChange(updateSun);
-    folderSky.open();
-
-    const folderWaterLvl = gui.addFolder('Water Level');
-    folderWaterLvl.add(parameters, 'waterLevel', -3, 3, 0.01).name('water level (cm)').onChange((value) => {
-        water.position.y = (value);
-    });
-    folderWaterLvl.open();
-
-    const waterUniforms = water.material.uniforms;
-    const folderWater = gui.addFolder('Water');
-    folderWater.add(waterUniforms.distortionScale, 'value', 0, 8, 0.1).name('distortionScale');
-    folderWater.add(waterUniforms.size, 'value', 0.1, 10, 0.1).name('size');
-    folderWater.open();
-
-    window.addEventListener('resize', onWindowResize);
+  // Start animation loop
+  app.renderer.setAnimationLoop(animate);
 }
 
-async function setupTerrain() {
-    const textureLoader = new THREE.TextureLoader();
-    const heightMap = textureLoader.load('terrain_data/pol_nmt.png', () => { console.log("Height map loaded"); }, undefined, (error) => { console.error("Error loading height map:", error); });
-    const diffuseMap = textureLoader.load('terrain_data/pol_vizka.png', () => { console.log("Diffusion map loaded"); }, undefined, (error) => { console.error("Error loading diffusion map:", error); });
-
-
-    const terrainMaterial = new THREE.MeshStandardMaterial({
-        map: diffuseMap,
-        displacementMap: heightMap,
-        displacementScale: 2,
-        roughness: 0.8,
-        metalness: 0.2,
-    });
-
-    // Create terrain geometry based on DEM dimensions
-    const terrainGeometry = new THREE.PlaneGeometry(200, 200, terrainSize.width - 1, terrainSize.height - 1);
-    terrainGeometry.rotateX(-Math.PI / 2);
-    terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
-    terrain.receiveShadow = true;
-    terrain.castShadow = true;
-    scene.add(terrain);
-}
-
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
+/**
+ * Animation loop
+ */
 function animate() {
-    render();
-    stats.update();
+  const delta = app.clock.getDelta();
+
+  // Update animations
+  updateWater(app.water, delta);
+  app.controls.update();
+
+  // Render
+  app.renderer.render(app.scene, app.camera);
+  app.stats.update();
 }
 
-function render() {
-    water.material.uniforms['time'].value += 1.0 / 60.0; // Animate water
-    renderer.render(scene, camera);
-}
+// Start when DOM is ready
+init().catch(console.error);
