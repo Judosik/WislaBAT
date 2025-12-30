@@ -1,83 +1,84 @@
-// src/loadTerrain.js
-
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { CONFIG } from "./config.js";
 
-/**
- * Load glTF terrain model with Draco compression support
- * Falls back to simple plane if loading fails
- */
-export function loadTerrain(scene) {
-  return new Promise((resolve) => {
-    const gltfLoader = new GLTFLoader();
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.6/");
-    gltfLoader.setDRACOLoader(dracoLoader);
+const TERRAIN_SIZE = 200;
+const TERRAIN_SEGMENTS = 256;
+const HEIGHT_SCALE = CONFIG.heightmap?.scale || 2;
+const SHOULD_LOAD_GLTF = CONFIG.useGLTF || false;
 
-    let terrainLoaded = false;
+export async function loadTerrain(scene) {
+  // 1. Load DEM immediately
+  let terrain = await loadHeightmapTerrain();
+  scene.add(terrain);
 
-    // Timeout: Fallback po 10 sekundach
-    setTimeout(() => {
-      if (!terrainLoaded) {
-        console.warn("⚠ Switching to fallback (timeout)");
-        const fallback = createFallbackTerrain();
-        scene.add(fallback);
-        resolve(fallback);
-      }
-    }, 10000);
+  // 2. Background upgrade (only if flag is true)
+  if (SHOULD_LOAD_GLTF) {
+    upgradeToGLTF(scene, terrain);
+  }
 
-    gltfLoader.load(
-      CONFIG.assets.terrain,
-      (gltf) => {
-        if (terrainLoaded) return; // Ignore if fallback already used
-        terrainLoaded = true;
+  return terrain;
+}
 
-        const terrain = gltf.scene;
-        terrain.traverse((child) => {
-          if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-          }
-        });
+async function upgradeToGLTF(scene, oldTerrain) {
+  // Dynamic imports keep the initial bundle small
+  const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
+  const { DRACOLoader } = await import("three/addons/loaders/DRACOLoader.js");
 
-        scene.add(terrain);
-        console.log("✓ Terrain loaded");
-        resolve(terrain);
-      },
-      null, // progress - optional
-      (error) => {
-        if (terrainLoaded) return;
-        terrainLoaded = true;
+  const loader = new GLTFLoader();
+  const draco = new DRACOLoader();
+  draco.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.6/");
+  loader.setDRACOLoader(draco);
 
-        console.warn("⚠ Load error, using fallback:", error.message);
-        const fallback = createFallbackTerrain();
-        scene.add(fallback);
-        resolve(fallback);
-      }
-    );
+  loader.load(CONFIG.assets.terrain, (gltf) => {
+    const newModel = gltf.scene;
+    
+    // Setup shadows
+    newModel.traverse(child => {
+      if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
+    });
+
+    // Swap and cleanup
+    scene.remove(oldTerrain);
+    scene.add(newModel);
+    
+    // Free memory
+    oldTerrain.geometry.dispose();
+    oldTerrain.material.dispose();
+    console.log("✓ Terrain upgraded to GLTF");
   });
 }
 
+async function loadHeightmapTerrain() {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = CONFIG.assets.heightmap;
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width; canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, img.width, img.height).data;
 
-/**
- * Create simple plane as fallback if glTF fails to load
- */
-function createFallbackTerrain() {
-  const geometry = new THREE.PlaneGeometry(200, 200, 32, 32);
-  geometry.rotateX(-Math.PI / 2);
+      const geo = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, TERRAIN_SEGMENTS, TERRAIN_SEGMENTS);
+      geo.rotateX(-Math.PI / 2);
 
-  const material = new THREE.MeshStandardMaterial({
-    color: 0x8b7355,
-    roughness: 0.8,
-    metalness: 0.2,
+      const pos = geo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const x = Math.floor((i % (TERRAIN_SEGMENTS + 1)) / TERRAIN_SEGMENTS * (img.width - 1));
+        const y = Math.floor(Math.floor(i / (TERRAIN_SEGMENTS + 1)) / TERRAIN_SEGMENTS * (img.height - 1));
+        const bright = data[(y * img.width + x) * 4] / 255;
+        pos.setY(i, bright * HEIGHT_SCALE);
+      }
+      geo.computeVertexNormals();
+
+      const mat = new THREE.MeshStandardMaterial({ 
+        map: new THREE.TextureLoader().load(CONFIG.assets.terrainTexture) 
+      });
+      
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.receiveShadow = true;
+      resolve(mesh);
+    };
   });
-
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  mesh.name = "FallbackTerrain"; // Debug identifier
-
-  return mesh;
 }

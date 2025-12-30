@@ -33,10 +33,10 @@ export const CONFIG = {
     size: 10000,
     // Presets: preset name → elevation (meters)
     levelPresets: {
-      Low: 0.2,
-      Mid: 0.54,
-      High: 1.2,
-      Mean: 2.0,
+      "Risk : 1 to 10 years": 0.2,
+      "Risk : 1 to 100 years": 0.54,
+      "Risk : 1 to 500 years": 1.2,
+      "Mean level of water": 2.0,
     },
     defaultLevel: 0.54,
   },
@@ -71,6 +71,8 @@ export const CONFIG = {
 
   // Asset paths
   assets: {
+    terrainTexture: "terrain_data/orto_phot.png",
+    heightmap: "terrain_data/dem.png",
     terrain: "models/terrain.glb",
     waterNormals: "textures/waternormals.jpg",
     environmentHDR: "hdri/environment.hdr",
@@ -85,5 +87,5 @@ export const parameters = {
   elevation: CONFIG.lighting.sun.elevation,
   azimuth: CONFIG.lighting.sun.azimuth,
   waterLevel: CONFIG.water.defaultLevel,
-  waterPreset: "Mean",
+  waterPreset: "Mean level of water",
 };
