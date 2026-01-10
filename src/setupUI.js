@@ -7,6 +7,8 @@ import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import Stats from "three/addons/libs/stats.module.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { CONFIG, WATER_PRESETS, parameters } from "./config.js";
+import { getGeoTransform } from "./loadTerrain.js";
+import { formatEPSG2180, formatElevation } from "./geoUtils.js";
 
 /**
  * Create water mesh
@@ -161,4 +163,70 @@ export function setupGUI(
  */
 export function updateWater(water, delta) {
   water.material.uniforms["time"].value += delta;
+}
+
+/**
+ * Setup coordinate display panel
+ * Shows EPSG:2180 coordinates and elevation when geospatial mode is enabled
+ */
+export function setupCoordinateDisplay(camera, terrain, container) {
+  if (!CONFIG.geospatial.enabled) return null;
+
+  const geoTransform = getGeoTransform();
+  if (!geoTransform) return null;
+
+  // Create coordinate display panel
+  const coordPanel = document.createElement("div");
+  coordPanel.id = "coord-display";
+  coordPanel.style.cssText = `
+    position: absolute;
+    bottom: 50px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 10px 15px;
+    font-family: monospace;
+    font-size: 12px;
+    border-radius: 4px;
+    pointer-events: none;
+    line-height: 1.6;
+  `;
+  coordPanel.innerHTML = `
+    <div><strong>EPSG:2180 Coordinates</strong></div>
+    <div id="coord-xy">X: -, Y: -</div>
+    <div id="coord-elev">Elevation: -</div>
+  `;
+  container.appendChild(coordPanel);
+
+  // Setup raycaster for terrain intersection
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+
+  function onMouseMove(event) {
+    // Calculate mouse position in normalized device coordinates
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    // Raycast to terrain
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObject(terrain, true);
+
+    if (intersects.length > 0) {
+      const point = intersects[0].point;
+
+      // Convert scene coordinates to EPSG:2180
+      const geoCoords = geoTransform.toGeoCoords(point.x, point.z);
+      const elevation = geoTransform.toGeoElevation(point.y);
+
+      // Update display
+      document.getElementById("coord-xy").textContent =
+        `X: ${geoCoords.x.toFixed(2)}m E, Y: ${geoCoords.y.toFixed(2)}m N`;
+      document.getElementById("coord-elev").textContent =
+        `Elevation: ${elevation.toFixed(2)} m`;
+    }
+  }
+
+  window.addEventListener("mousemove", onMouseMove);
+
+  return coordPanel;
 }

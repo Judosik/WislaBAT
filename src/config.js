@@ -76,6 +76,24 @@ export const CONFIG = {
     terrain: "models/terrain.glb",
     waterNormals: "textures/waternormals.jpg",
     environmentHDR: "hdri/environment.hdr",
+    terrainMetadata: "terrain_data/metadata.json",
+  },
+
+  // Geospatial settings
+  geospatial: {
+    enabled: true,
+    // Vertical exaggeration for better visualization (1.0 = true scale)
+    verticalExaggeration: 1.5,
+    // Center the terrain at origin for better Three.js handling
+    centerAtOrigin: true,
+    // Scale factor to convert from CRS units to Three.js units
+    // For EPSG:2180 (meters), using 1:1000 scale (1 Three.js unit = 1km)
+    scaleToThreeJS: 0.001,
+  },
+
+  // Heightmap-specific settings (fallback if GLTF not used)
+  heightmap: {
+    scale: 30.0, // Will be overridden by metadata if available
   },
 };
 

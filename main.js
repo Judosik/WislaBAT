@@ -11,6 +11,7 @@ import {
   setupGUI,
   updateWater,
   updateSun,
+  setupCoordinateDisplay,
 } from "./src/setupUI.js";
 
 // Global objects
@@ -75,6 +76,9 @@ async function init() {
     container
   );
   app.stats = stats;
+
+  // Step 6: Setup coordinate display (if geospatial mode enabled)
+  setupCoordinateDisplay(app.camera, app.terrain, container);
 
   // Initial sun position
   updateSun(app.sun, app.sky, app.water, app.directionalLight, parameters);
