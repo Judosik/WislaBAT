@@ -1,0 +1,25 @@
+{
+  "crs": "EPSG:2178",
+  "bounds": {
+    "minX": 7499850,
+    "maxX": 7501430,
+    "minY": 5791300,
+    "maxY": 5793040
+  },
+  "elevation": {
+    "min": 76,
+    "max": 135.0,
+    "unit": "meters"
+  },
+  "resolution": {
+    "x": 1.0,
+    "y": 1.0,
+    "unit": "meters"
+  },
+  "description": "EPSG:2178 (Poland CS2000 zone 6) coordinate system. Bounds extracted from photogrammetric model.",
+  "modelInfo": {
+    "centerX": 7500640,
+    "centerY": 5792140,
+    "approximateSize": 1600
+  }
+}
