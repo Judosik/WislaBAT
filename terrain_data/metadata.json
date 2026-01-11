@@ -1,14 +1,14 @@
 {
   "crs": "EPSG:2178",
   "bounds": {
-    "minX": 7499850,
-    "maxX": 7501430,
-    "minY": 5791300,
-    "maxY": 5793040
+    "minX": 636320.734,
+    "maxX": 637901.471,
+    "minY": 489454.110,
+    "maxY": 491425.623
   },
   "elevation": {
-    "min": 76,
-    "max": 135.0,
+    "min": 76.81,
+    "max": 107.44,
     "unit": "meters"
   },
   "resolution": {

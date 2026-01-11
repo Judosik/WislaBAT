@@ -71,8 +71,8 @@ export const CONFIG = {
 
   // Asset paths
   assets: {
-    terrainTexture: "terrain_data/orto_phot.png",
-    heightmap: "terrain_data/dem.png",
+    terrainTexture: "terrain_data/dem_viz.png",
+    heightmap: "terrain_data/dem.tif",
     terrain: "models/model_zeroed.glb", // Primary GLTF model
     waterNormals: "textures/waternormals.jpg",
     environmentHDR: "hdri/environment.hdr",
