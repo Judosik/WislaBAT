@@ -2,7 +2,7 @@
 
 > 🇬🇧 English version | [🇵🇱 Wersja polska](GEOSPATIAL_SETUP_PL.md)
 
-This guide explains how to configure your terrain data with proper geospatial metadata for EPSG:2180 (Polish CS92) coordinate system.
+This guide explains how to configure your terrain data with proper geospatial metadata for EPSG:2178 (Polish CS92) coordinate system.
 
 ## Quick Start
 
@@ -47,7 +47,7 @@ Pixel Size = (30.0, -30.0)               # resolution X, Y
 4. Find:
    - **Extent**: minX, maxX, minY, maxY
    - **Pixel Size**: resolution
-   - **CRS**: Should be EPSG:2180
+   - **CRS**: Should be EPSG:2178
 
 ---
 
@@ -57,7 +57,7 @@ Edit `terrain_data/metadata.json` with your actual values:
 
 ```json
 {
-  "crs": "EPSG:2180",
+  "crs": "EPSG:2178",
   "bounds": {
     "minX": 650000,    // ← Replace with your values
     "maxX": 680000,
@@ -129,7 +129,7 @@ When you run the application, check the browser console:
 ```
 ✓ Geospatial metadata loaded
 GeoTransform initialized: {
-  crs: "EPSG:2180",
+  crs: "EPSG:2178",
   realWorldSize: "30000m × 30000m",
   threeJSSize: "30.0 × 30.0",
   center: "(665000, 495000)"
@@ -138,7 +138,7 @@ GeoTransform initialized: {
 
 Move your mouse over the terrain - you should see:
 ```
-EPSG:2180 Coordinates
+EPSG:2178 Coordinates
 X: 665432.12m E, Y: 495123.45m N
 Elevation: 45.23 m
 ```
@@ -147,7 +147,7 @@ Elevation: 45.23 m
 
 ## Coordinate Systems Reference
 
-### EPSG:2180 (Polish CS92)
+### EPSG:2178 (Polish CS92)
 - **Units**: Meters
 - **Coverage**: Poland
 - **Type**: Projected (Transverse Mercator)
@@ -176,7 +176,7 @@ scaleToThreeJS: 0.001,  // Larger = smaller terrain
 
 ### Coordinates show wrong values
 1. Verify `bounds` in [metadata.json](terrain_data/metadata.json) match `gdalinfo` output
-2. Check that CRS is EPSG:2180
+2. Check that CRS is EPSG:2178
 3. Ensure `centerAtOrigin: true` matches your expectations
 
 ### No coordinate display appears
@@ -193,7 +193,7 @@ scaleToThreeJS: 0.001,  // Larger = smaller terrain
 If you only have PNG + world file (.pgw):
 
 ```bash
-gdal_translate -a_srs EPSG:2180 \
+gdal_translate -a_srs EPSG:2178 \
   -a_ullr 650000 510000 680000 480000 \
   dem.png dem.tif
 ```
@@ -226,7 +226,7 @@ If your data covers Warsaw city center:
 
 ```json
 {
-  "crs": "EPSG:2180",
+  "crs": "EPSG:2178",
   "bounds": {
     "minX": 638000,  // West of Warsaw
     "maxX": 658000,  // East of Warsaw
@@ -252,4 +252,4 @@ If your data covers Warsaw city center:
 
 1. Run `gdalinfo terrain_data/your_file.tif` and paste output
 2. Check browser console for error messages
-3. Verify coordinates are in EPSG:2180 (not lat/lon!)
+3. Verify coordinates are in EPSG:2178 (not lat/lon!)

@@ -13,13 +13,13 @@ export const CONFIG = {
   camera: {
     fov: 45,
     near: 1,
-    far: 2000,
-    position: { x: 30, y: 120, z: 130 },
+    far: 100000, // Far plane to see water extending to horizon
+    position: { x: 500, y: 500, z: 300 },
     controls: {
       maxPolarAngle: Math.PI * 0.495,
       target: { x: 0, y: 10, z: 0 },
       minDistance: 10.0,
-      maxDistance: 180.0,
+      maxDistance: 5000.0, // Allow zooming out to see full terrain
     },
   },
 
@@ -30,20 +30,20 @@ export const CONFIG = {
     distortionScale: 3.7,
     sunColor: 0xffffff,
     waterColor: 0x001e0f,
-    size: 10000,
+    size: 50000, // Large plane to extend to horizon
     // Presets: preset name → elevation (meters)
     levelPresets: {
-      "Risk : 1 to 10 years": 0.2,
-      "Risk : 1 to 100 years": 0.54,
-      "Risk : 1 to 500 years": 1.2,
-      "Mean level of water": 2.0,
+      "Risk : 1 to 10 years": 82.60,
+      "Risk : 1 to 100 years": 83.80,
+      "Risk : 1 to 500 years": 84.39,
+      "Mean level of water": 76.40,
     },
-    defaultLevel: 0.54,
+    defaultLevel: 76.40,
   },
 
   // Sky settings
   sky: {
-    scale: 10000,
+    scale: 50000, // Match water plane size
     turbidity: 10,
     rayleigh: 2,
     mieCoefficient: 0.005,
@@ -73,10 +73,18 @@ export const CONFIG = {
   assets: {
     terrainTexture: "terrain_data/orto_phot.png",
     heightmap: "terrain_data/dem.png",
-    terrain: "models/terrain.glb",
+    terrain: "models/model_zeroed.glb", // Primary GLTF model
     waterNormals: "textures/waternormals.jpg",
     environmentHDR: "hdri/environment.hdr",
     terrainMetadata: "terrain_data/metadata.json",
+  },
+
+  // Terrain loading strategy
+  terrain: {
+    useGLTF: true, // Use GLTF as primary source (not DEM)
+    useDEMFallback: false, // Don't show DEM first, load GLTF directly
+    isModelZeroed: true, // true = model_zeroed.glb (origin centered), false = model.gltf (real coords)
+    autoCameraPosition: true, // Automatically position camera based on model bounds
   },
 
   // Geospatial settings
@@ -87,7 +95,7 @@ export const CONFIG = {
     // Center the terrain at origin for better Three.js handling
     centerAtOrigin: true,
     // Scale factor to convert from CRS units to Three.js units
-    // For EPSG:2180 (meters), using 1:1000 scale (1 Three.js unit = 1km)
+    // For EPSG:2178 (meters), using 1:1000 scale (1 Three.js unit = 1km)
     scaleToThreeJS: 0.001,
   },
 
@@ -104,6 +112,6 @@ export const WATER_PRESETS = CONFIG.water.levelPresets;
 export const parameters = {
   elevation: CONFIG.lighting.sun.elevation,
   azimuth: CONFIG.lighting.sun.azimuth,
-  waterLevel: CONFIG.water.defaultLevel,
+  waterLevel: CONFIG.water.defaultLevel, // 76.00m
   waterPreset: "Mean level of water",
 };

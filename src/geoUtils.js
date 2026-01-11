@@ -4,7 +4,7 @@ import { CONFIG } from "./config.js";
 
 /**
  * Geospatial coordinate transformation utilities
- * Handles conversion between EPSG:2180 (Polish CS92) and Three.js scene coordinates
+ * Handles conversion between EPSG:2178 (Polish CS2000 zone 6) and Three.js scene coordinates
  */
 
 export class GeoTransform {
@@ -12,7 +12,7 @@ export class GeoTransform {
     this.metadata = metadata;
     this.bounds = metadata.bounds;
 
-    // Calculate terrain dimensions in real-world units (meters for EPSG:2180)
+    // Calculate terrain dimensions in real-world units (meters for EPSG:2178)
     this.width = this.bounds.maxX - this.bounds.minX;
     this.height = this.bounds.maxY - this.bounds.minY;
 
@@ -37,9 +37,9 @@ export class GeoTransform {
   }
 
   /**
-   * Convert EPSG:2180 coordinates to Three.js scene coordinates
-   * @param {number} x - EPSG:2180 X coordinate (easting)
-   * @param {number} y - EPSG:2180 Y coordinate (northing)
+   * Convert EPSG:2178 coordinates to Three.js scene coordinates
+   * @param {number} x - EPSG:2178 X coordinate (easting)
+   * @param {number} y - EPSG:2178 Y coordinate (northing)
    * @returns {{x: number, z: number}} Three.js position (y is elevation)
    */
   toSceneCoords(x, y) {
@@ -57,10 +57,10 @@ export class GeoTransform {
   }
 
   /**
-   * Convert Three.js scene coordinates back to EPSG:2180
+   * Convert Three.js scene coordinates back to EPSG:2178
    * @param {number} sceneX - Three.js X coordinate
    * @param {number} sceneZ - Three.js Z coordinate
-   * @returns {{x: number, y: number}} EPSG:2180 coordinates
+   * @returns {{x: number, y: number}} EPSG:2178 coordinates
    */
   toGeoCoords(sceneX, sceneZ) {
     if (CONFIG.geospatial.centerAtOrigin) {
@@ -136,14 +136,17 @@ export async function loadTerrainMetadata() {
 }
 
 /**
- * Format EPSG:2180 coordinates for display
+ * Format EPSG:2178 coordinates for display
  * @param {number} x - Easting
  * @param {number} y - Northing
  * @returns {string} Formatted coordinate string
  */
-export function formatEPSG2180(x, y) {
+export function formatEPSG2178(x, y) {
   return `${x.toFixed(2)}E, ${y.toFixed(2)}N`;
 }
+
+// Legacy export for backwards compatibility
+export const formatEPSG2180 = formatEPSG2178;
 
 /**
  * Format elevation for display

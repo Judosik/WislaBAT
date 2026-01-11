@@ -3,7 +3,7 @@
 import * as THREE from "three";
 import { CONFIG, parameters } from "./src/config.js";
 import { setupScene, setupWindowResize } from "./src/setupScene.js";
-import { loadTerrain } from "./src/loadTerrain.js";
+import { loadTerrain, setCameraForModel } from "./src/loadTerrain.js";
 import {
   createWater,
   createSky,
@@ -48,6 +48,13 @@ async function init() {
   console.log("Przetwarzanie terenu...");
   try {
     app.terrain = await loadTerrain(app.scene);
+
+    // Auto-position camera based on model bounds
+    const cameraTarget = setCameraForModel(app.camera, app.terrain);
+    if (cameraTarget) {
+      // Store target for later use with controls
+      app.cameraTarget = cameraTarget;
+    }
   } catch (error) {
     console.error("Terrain loading failed:", error);
   }
@@ -63,6 +70,13 @@ async function init() {
   // Step 4: Setup controls
   console.log("Setting up controls...");
   app.controls = setupControls(app.camera, app.renderer);
+
+  // Update controls target if we have one from camera positioning
+  if (app.cameraTarget) {
+    app.controls.target.copy(app.cameraTarget);
+    app.controls.update();
+  }
+
   setupWindowResize(app.camera, app.renderer);
 
   // Step 5: Setup GUI and stats

@@ -2,7 +2,7 @@
 
 > 🇬🇧 English version | [🇵🇱 Wersja polska](README_PL.md)
 
-> Interactive 3D visualization of flood scenarios using photogrammetric and geospatial data in EPSG:2180 coordinate system (Polish CS92)
+> Interactive 3D visualization of flood scenarios using photogrammetric and geospatial data in EPSG:2178 coordinate system (Polish CS92)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Three.js](https://img.shields.io/badge/Three.js-r170-blue.svg)](https://threejs.org/)
@@ -30,7 +30,7 @@
 
 ## Project Description
 
-**WislaBAT** is a 3D visualization tool for flood hazard scenarios based on UAV photogrammetry data and Digital Elevation Models (DEM). The project uses WebGL (Three.js) to render interactive terrain models with full support for the EPSG:2180 (Polish CS92) coordinate system, enabling precise spatial analysis and simulation of various water levels.
+**WislaBAT** is a 3D visualization tool for flood hazard scenarios based on UAV photogrammetry data and Digital Elevation Models (DEM). The project uses WebGL (Three.js) to render interactive terrain models with full support for the EPSG:2178 (Polish CS92) coordinate system, enabling precise spatial analysis and simulation of various water levels.
 
 ### Who is it for?
 
@@ -42,14 +42,15 @@
 ## Features
 
 ### 🌍 Geospatial Support
-- ✅ Full EPSG:2180 (Polish CS92) support with metric scaling
+- ✅ Full EPSG:2178 (Polish CS92) support with metric scaling
 - ✅ Automatic GeoTIFF metadata loading
 - ✅ Real-time interactive coordinate display
 - ✅ Scene ↔ reference system coordinate conversion
 
 ### 🗺️ Terrain Loading and Rendering
-- ✅ **Hybrid loading**: fast DEM heightmap + optional high-poly GLTF
-- ✅ Photogrammetric model support with Draco compression
+- ✅ **Primary GLTF model**: High-fidelity photogrammetric terrain with Draco compression
+- ✅ Automatic coordinate transformation from EPSG:2178 to Three.js space
+- ✅ DEM heightmap fallback support for rapid prototyping
 - ✅ Automatic scaling based on real-world dimensions
 - ✅ Configurable vertical exaggeration
 
@@ -130,7 +131,7 @@ Copy values from `gdalinfo`:
 
 ```json
 {
-  "crs": "EPSG:2180",
+  "crs": "EPSG:2178",
   "bounds": {
     "minX": 650000,  // Upper Left X
     "maxX": 680000,  // Lower Right X
@@ -150,7 +151,7 @@ Copy values from `gdalinfo`:
 }
 ```
 
-3. **Done!** Refresh the browser and hover over the terrain - you'll see EPSG:2180 coordinates.
+3. **Done!** Refresh the browser and hover over the terrain - you'll see EPSG:2178 coordinates.
 
 ### Detailed Documentation
 
@@ -203,18 +204,18 @@ WislaBAT/
 │
 ├── src/
 │   ├── config.js              # Central configuration
-│   ├── geoUtils.js            # EPSG:2180 geospatial utilities
+│   ├── geoUtils.js            # EPSG:2178 geospatial utilities
 │   ├── loadTerrain.js         # DEM + GLTF loading
 │   ├── setupScene.js          # Three.js initialization
 │   └── setupUI.js             # GUI, water, sky, controls
 │
 ├── terrain_data/
-│   ├── dem.png                # Heightmap (exported from GeoTIFF)
+│   ├── dem.png                # Heightmap (fallback/prototyping)
 │   ├── orto_phot.png          # Orthophoto texture
 │   └── metadata.json          # Geospatial metadata ← CONFIGURE THIS
 │
 ├── models/
-│   └── terrain.glb            # Optional high-poly model (Draco)
+│   └── model_zeroed.glb       # Primary GLTF terrain model (Draco compressed)
 │
 ├── textures/
 │   └── waternormals.jpg       # Water normal map
@@ -437,14 +438,14 @@ const TERRAIN_SEGMENTS = 256;
 
 ### Coordinates show wrong values
 
-**Problem:** EPSG:2180 coordinates out of range for Poland
+**Problem:** EPSG:2178 coordinates out of range for Poland
 
 **Solution:**
-1. Check `terrain_data/metadata.json` - bounds must be in EPSG:2180 (meters)
+1. Check `terrain_data/metadata.json` - bounds must be in EPSG:2178 (meters)
 2. Use `gdalinfo` to verify source GeoTIFF CRS
 3. If data is in different system, convert:
    ```bash
-   gdalwarp -s_srs EPSG:4326 -t_srs EPSG:2180 input.tif output.tif
+   gdalwarp -s_srs EPSG:4326 -t_srs EPSG:2178 input.tif output.tif
    ```
 
 ### Poor performance (low FPS)
@@ -505,7 +506,7 @@ const TERRAIN_SEGMENTS = 256;
 ### Classes and Modules
 
 **GeoTransform** (`src/geoUtils.js`)
-- EPSG:2180 ↔ Three.js coordinate conversion
+- EPSG:2178 ↔ Three.js coordinate conversion
 - Height scaling with vertical exaggeration
 - Terrain dimension calculation
 

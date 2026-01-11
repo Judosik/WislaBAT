@@ -2,7 +2,7 @@
 
 > 🇵🇱 Wersja polska | [🇬🇧 English version](README.md)
 
-> Interaktywna wizualizacja 3D scenariuszy powodziowych z wykorzystaniem danych fotogrametrycznych i geoprzestrzennych w układzie EPSG:2180 (Polish CS92)
+> Interaktywna wizualizacja 3D scenariuszy powodziowych z wykorzystaniem danych fotogrametrycznych i geoprzestrzennych w układzie EPSG:2178 (Polish CS92)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Three.js](https://img.shields.io/badge/Three.js-r170-blue.svg)](https://threejs.org/)
@@ -30,7 +30,7 @@
 
 ## Opis projektu
 
-**WislaBAT** to narzędzie do wizualizacji 3D scenariuszy zagrożenia powodziowego oparte na danych z fotogrametrii UAV i numerycznych modelach terenu (DEM). Projekt wykorzystuje WebGL (Three.js) do renderowania interaktywnych modeli terenu z pełnym wsparciem dla układu współrzędnych EPSG:2180 (Polish CS92), umożliwiając precyzyjną analizę przestrzenną i symulację różnych poziomów wody.
+**WislaBAT** to narzędzie do wizualizacji 3D scenariuszy zagrożenia powodziowego oparte na danych z fotogrametrii UAV i numerycznych modelach terenu (DEM). Projekt wykorzystuje WebGL (Three.js) do renderowania interaktywnych modeli terenu z pełnym wsparciem dla układu współrzędnych EPSG:2178 (Polish CS92), umożliwiając precyzyjną analizę przestrzenną i symulację różnych poziomów wody.
 
 ### Dla kogo?
 
@@ -42,14 +42,15 @@
 ## Funkcje
 
 ### 🌍 Wsparcie geoprzestrzenne
-- ✅ Pełna obsługa EPSG:2180 (Polish CS92) z metrycznym skalowaniem
+- ✅ Pełna obsługa EPSG:2178 (Polish CS92) z metrycznym skalowaniem
 - ✅ Automatyczne wczytywanie metadanych z GeoTIFF
 - ✅ Interaktywne wyświetlanie współrzędnych w czasie rzeczywistym
 - ✅ Konwersja współrzędnych scena ↔ układ odniesienia
 
 ### 🗺️ Ładowanie i renderowanie terenu
-- ✅ **Hybrydowe ładowanie**: szybki DEM heightmap + opcjonalne high-poly GLTF
-- ✅ Obsługa modeli fotogrametrycznych z kompresją Draco
+- ✅ **Główny model GLTF**: Wysoko-precyzyjny teren fotogrametryczny z kompresją Draco
+- ✅ Automatyczna transformacja współrzędnych z EPSG:2178 do przestrzeni Three.js
+- ✅ Wsparcie DEM heightmap jako fallback do szybkiego prototypowania
 - ✅ Automatyczne skalowanie na podstawie rzeczywistych wymiarów
 - ✅ Konfigurowalny vertical exaggeration
 
@@ -130,7 +131,7 @@ Skopiuj wartości z `gdalinfo`:
 
 ```json
 {
-  "crs": "EPSG:2180",
+  "crs": "EPSG:2178",
   "bounds": {
     "minX": 650000,  // Upper Left X
     "maxX": 680000,  // Lower Right X
@@ -150,7 +151,7 @@ Skopiuj wartości z `gdalinfo`:
 }
 ```
 
-3. **Gotowe!** Odśwież przeglądarkę i najedź myszką na teren - zobaczysz współrzędne EPSG:2180.
+3. **Gotowe!** Odśwież przeglądarkę i najedź myszką na teren - zobaczysz współrzędne EPSG:2178.
 
 ### Szczegółowa dokumentacja
 
@@ -203,18 +204,18 @@ WislaBAT/
 │
 ├── src/
 │   ├── config.js              # Centralna konfiguracja
-│   ├── geoUtils.js            # Narzędzia geoprzestrzenne EPSG:2180
+│   ├── geoUtils.js            # Narzędzia geoprzestrzenne EPSG:2178
 │   ├── loadTerrain.js         # Ładowanie DEM + GLTF
 │   ├── setupScene.js          # Inicjalizacja Three.js
 │   └── setupUI.js             # GUI, water, sky, controls
 │
 ├── terrain_data/
-│   ├── dem.png                # Heightmap (wyeksportowany z GeoTIFF)
+│   ├── dem.png                # Heightmap (fallback/prototypowanie)
 │   ├── orto_phot.png          # Tekstura ortofoto
 │   └── metadata.json          # Metadane geoprzestrzenne ← KONFIGURUJ TO
 │
 ├── models/
-│   └── terrain.glb            # Opcjonalny high-poly model (Draco)
+│   └── model_zeroed.glb       # Główny model terenu GLTF (kompresja Draco)
 │
 ├── textures/
 │   └── waternormals.jpg       # Normal map wody
@@ -437,14 +438,14 @@ const TERRAIN_SEGMENTS = 256;
 
 ### Współrzędne pokazują błędne wartości
 
-**Problem:** Współrzędne EPSG:2180 poza zakresem dla Polski
+**Problem:** Współrzędne EPSG:2178 poza zakresem dla Polski
 
 **Rozwiązanie:**
-1. Sprawdź `terrain_data/metadata.json` - bounds muszą być w EPSG:2180 (metry)
+1. Sprawdź `terrain_data/metadata.json` - bounds muszą być w EPSG:2178 (metry)
 2. Użyj `gdalinfo` aby zweryfikować CRS źródłowego GeoTIFF
 3. Jeśli dane są w innym układzie, przekonwertuj:
    ```bash
-   gdalwarp -s_srs EPSG:4326 -t_srs EPSG:2180 input.tif output.tif
+   gdalwarp -s_srs EPSG:4326 -t_srs EPSG:2178 input.tif output.tif
    ```
 
 ### Słaba wydajność (niskie FPS)
@@ -505,7 +506,7 @@ const TERRAIN_SEGMENTS = 256;
 ### Klasy i moduły
 
 **GeoTransform** (`src/geoUtils.js`)
-- Konwersja EPSG:2180 ↔ Three.js coordinates
+- Konwersja EPSG:2178 ↔ Three.js coordinates
 - Skalowanie wysokości z vertical exaggeration
 - Kalkulacja wymiarów terenu
 

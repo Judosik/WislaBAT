@@ -2,7 +2,7 @@
 
 > 🇵🇱 Wersja polska | [🇬🇧 English version](GEOSPATIAL_SETUP.md)
 
-Ten przewodnik wyjaśnia, jak skonfigurować dane terenowe z odpowiednimi metadanymi geoprzestrzennymi dla układu współrzędnych EPSG:2180 (Polish CS92).
+Ten przewodnik wyjaśnia, jak skonfigurować dane terenowe z odpowiednimi metadanymi geoprzestrzennymi dla układu współrzędnych EPSG:2178 (Polish CS92).
 
 ## Szybki start
 
@@ -47,7 +47,7 @@ Pixel Size = (30.0, -30.0)               # rozdzielczość X, Y
 4. Znajdź:
    - **Zasięg**: minX, maxX, minY, maxY
    - **Rozmiar piksela**: rozdzielczość
-   - **CRS**: Powinien być EPSG:2180
+   - **CRS**: Powinien być EPSG:2178
 
 ---
 
@@ -57,7 +57,7 @@ Edytuj `terrain_data/metadata.json` swoimi rzeczywistymi wartościami:
 
 ```json
 {
-  "crs": "EPSG:2180",
+  "crs": "EPSG:2178",
   "bounds": {
     "minX": 650000,    // ← Zamień na swoje wartości
     "maxX": 680000,
@@ -129,7 +129,7 @@ Kiedy uruchomisz aplikację, sprawdź konsolę przeglądarki:
 ```
 ✓ Geospatial metadata loaded
 GeoTransform initialized: {
-  crs: "EPSG:2180",
+  crs: "EPSG:2178",
   realWorldSize: "30000m × 30000m",
   threeJSSize: "30.0 × 30.0",
   center: "(665000, 495000)"
@@ -138,7 +138,7 @@ GeoTransform initialized: {
 
 Przesuń mysz nad teren - powinieneś zobaczyć:
 ```
-EPSG:2180 Coordinates
+EPSG:2178 Coordinates
 X: 665432.12m E, Y: 495123.45m N
 Elevation: 45.23 m
 ```
@@ -147,7 +147,7 @@ Elevation: 45.23 m
 
 ## Informacje o układach współrzędnych
 
-### EPSG:2180 (Polish CS92)
+### EPSG:2178 (Polish CS92)
 - **Jednostki**: Metry
 - **Pokrycie**: Polska
 - **Typ**: Odwzorowanie płaskie (Transverse Mercator)
@@ -176,7 +176,7 @@ scaleToThreeJS: 0.001,  // Większa wartość = mniejszy teren
 
 ### Współrzędne pokazują błędne wartości
 1. Zweryfikuj, że `bounds` w [metadata.json](terrain_data/metadata.json) pasują do wyniku `gdalinfo`
-2. Sprawdź, że CRS to EPSG:2180
+2. Sprawdź, że CRS to EPSG:2178
 3. Upewnij się, że `centerAtOrigin: true` odpowiada twoim oczekiwaniom
 
 ### Nie wyświetla się panel współrzędnych
@@ -193,7 +193,7 @@ scaleToThreeJS: 0.001,  // Większa wartość = mniejszy teren
 Jeśli masz tylko PNG + plik world (.pgw):
 
 ```bash
-gdal_translate -a_srs EPSG:2180 \
+gdal_translate -a_srs EPSG:2178 \
   -a_ullr 650000 510000 680000 480000 \
   dem.png dem.tif
 ```
@@ -226,7 +226,7 @@ Jeśli twoje dane obejmują centrum Warszawy:
 
 ```json
 {
-  "crs": "EPSG:2180",
+  "crs": "EPSG:2178",
   "bounds": {
     "minX": 638000,  // Zachód Warszawy
     "maxX": 658000,  // Wschód Warszawy
@@ -252,4 +252,4 @@ Jeśli twoje dane obejmują centrum Warszawy:
 
 1. Uruchom `gdalinfo terrain_data/twoj_plik.tif` i wklej wynik
 2. Sprawdź konsolę przeglądarki w poszukiwaniu komunikatów błędów
-3. Zweryfikuj, że współrzędne są w EPSG:2180 (nie lat/lon!)
+3. Zweryfikuj, że współrzędne są w EPSG:2178 (nie lat/lon!)

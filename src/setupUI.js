@@ -133,7 +133,7 @@ export function setupGUI(
     });
 
   customController = folderWaterLvl
-    .add(parameters, "waterLevel", -3, 3, 0.01)
+    .add(parameters, "waterLevel", 76, 135, 0.01)
     .name("Water Level (m)")
     .onChange((value) => {
       parameters.waterLevel = value;
@@ -192,7 +192,7 @@ export function setupCoordinateDisplay(camera, terrain, container) {
     line-height: 1.6;
   `;
   coordPanel.innerHTML = `
-    <div><strong>EPSG:2180 Coordinates</strong></div>
+    <div><strong>EPSG:2178 Coordinates</strong></div>
     <div id="coord-xy">X: -, Y: -</div>
     <div id="coord-elev">Elevation: -</div>
   `;
@@ -214,9 +214,12 @@ export function setupCoordinateDisplay(camera, terrain, container) {
     if (intersects.length > 0) {
       const point = intersects[0].point;
 
-      // Convert scene coordinates to EPSG:2180
+      // Convert scene coordinates to EPSG:2178
       const geoCoords = geoTransform.toGeoCoords(point.x, point.z);
-      const elevation = geoTransform.toGeoElevation(point.y);
+
+      // For zeroed model, Y is already in meters (with vertical exaggeration applied)
+      // Just divide by vertical exaggeration to get real elevation
+      const elevation = point.y / CONFIG.geospatial.verticalExaggeration;
 
       // Update display
       document.getElementById("coord-xy").textContent =
