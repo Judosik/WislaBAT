@@ -73,6 +73,9 @@
 
 ## Demo
 
+<img width="2508" height="1303" alt="image" src="https://github.com/user-attachments/assets/4b7221ef-e24e-4d28-9d0c-7c1288198a6b" />
+
+
 🔗 **[View live demo](https://judosik.github.io/WislaBAT/)**
 
 ## Installation
