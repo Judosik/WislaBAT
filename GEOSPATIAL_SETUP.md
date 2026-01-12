@@ -105,20 +105,17 @@ geospatial: {
   // Center terrain at origin (recommended for Three.js)
   centerAtOrigin: true,
 
-  // Scale factor: 1 Three.js unit = X meters
-  // 0.001 = 1 Three.js unit = 1km (good for large areas)
-  // 0.01  = 1 Three.js unit = 100m (medium areas)
-  scaleToThreeJS: 0.001,
+  // Note: All horizontal coordinates use 1:1 mapping in meters
+  // Only vertical axis uses exaggeration for visualization
 }
 ```
 
-### Scaling Recommendations
+### Coordinate Mapping
 
-| Terrain Size | scaleToThreeJS | Camera Distance |
-|--------------|----------------|-----------------|
-| < 5km        | 0.01 - 0.05    | 50-200          |
-| 5-50km       | 0.001 - 0.01   | 100-300         |
-| > 50km       | 0.0001 - 0.001 | 200-500         |
+The system uses **1:1 metric mapping** for all horizontal coordinates:
+- 1 meter in EPSG:2178 = 1 meter in Three.js scene
+- No horizontal scaling is applied
+- Only vertical exaggeration is used (default: 1.5x)
 
 ---
 
@@ -139,9 +136,10 @@ GeoTransform initialized: {
 Move your mouse over the terrain - you should see:
 ```
 EPSG:2178 Coordinates
-X: 665432.12m E, Y: 495123.45m N
+X: 665432.12m N, Y: 495123.45m E
 Elevation: 45.23 m
 ```
+Note: X = Northing (north-south), Y = Easting (east-west)
 
 ---
 
@@ -155,8 +153,8 @@ Elevation: 45.23 m
 - **False Northing**: -5,300,000m
 
 Typical coordinate ranges for Poland:
-- **X (Easting)**: 470,000 - 860,000
-- **Y (Northing)**: 180,000 - 810,000
+- **X (Northing)**: 180,000 - 810,000  (north-south axis)
+- **Y (Easting)**: 470,000 - 860,000   (east-west axis)
 
 ---
 
@@ -168,11 +166,14 @@ Adjust `verticalExaggeration` in [config.js](src/config.js#L86):
 verticalExaggeration: 2.0,  // Try different values
 ```
 
-### Terrain appears too small/large
-Adjust `scaleToThreeJS` in [config.js](src/config.js#L91):
+### Camera is too far or too close
+Adjust camera starting position in [config.js](src/config.js):
 ```javascript
-scaleToThreeJS: 0.001,  // Larger = smaller terrain
+camera: {
+  position: { x: 500, y: 500, z: 300 },  // Adjust based on terrain size
+}
 ```
+Note: All coordinates use 1:1 metric mapping (no scaling).
 
 ### Coordinates show wrong values
 1. Verify `bounds` in [metadata.json](terrain_data/metadata.json) match `gdalinfo` output

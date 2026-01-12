@@ -6,7 +6,6 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Three.js](https://img.shields.io/badge/Three.js-r170-blue.svg)](https://threejs.org/)
-[![Vite](https://img.shields.io/badge/Vite-5.x-646CFF.svg)](https://vitejs.dev/)
 
 ![WislaBAT Screenshot](docs/screenshot.png)
 
@@ -42,7 +41,7 @@
 ## Features
 
 ### 🌍 Geospatial Support
-- ✅ Full EPSG:2178 (Polish CS92) support with metric scaling
+- ✅ Full EPSG:2178 (Polish CS92) support with 1:1 metric coordinates
 - ✅ Automatic GeoTIFF metadata loading
 - ✅ Real-time interactive coordinate display
 - ✅ Scene ↔ reference system coordinate conversion
@@ -79,8 +78,8 @@
 
 ### Requirements
 
-- **Node.js** >= 18.0.0
-- **npm** >= 9.0.0
+- **Modern web browser** with WebGL 2.0 support (Chrome 90+, Firefox 88+, Safari 15+, Edge 90+)
+- **Local web server** (Python, Node.js http-server, VS Code Live Server, or any HTTP server)
 - **GDAL** (optional, for GeoTIFF metadata extraction)
 
 ### Installation Steps
@@ -90,23 +89,36 @@
 git clone https://github.com/Judosik/WislaBAT.git
 cd WislaBAT
 
-# 2. Install dependencies
-npm install
+# 2. Start a local web server (choose one method):
 
-# 3. Start development server
-npm run dev
+# Option A: Python 3
+python -m http.server 8000
 
-# 4. Open browser
-# http://localhost:5173
+# Option B: Python 2
+python -m SimpleHTTPServer 8000
+
+# Option C: Node.js http-server (install first: npm install -g http-server)
+http-server -p 8000
+
+# Option D: VS Code Live Server extension
+# Right-click index.html → "Open with Live Server"
+
+# 3. Open browser
+# http://localhost:8000
 ```
 
 ### Installation Verification
 
-After starting, you should see in the console:
+After opening in browser, check the console (F12):
 
 ```
+Inicjowanie sceny...
+Przetwarzanie terenu...
+Loading GLTF terrain model...
+✓ Geospatial metadata loaded
+✓ GLTF terrain loaded (zeroed model)
+✓ Camera positioned automatically
 ✓ Initialization complete
-✓ Geospatial metadata loaded (if configured)
 ```
 
 ## Geospatial Data Configuration
@@ -179,12 +191,12 @@ Includes:
 ### GUI Interface
 
 **Water Level**
-- **Preset**: Select predefined scenario
-  - Risk: 1 to 10 years (0.2m)
-  - Risk: 1 to 100 years (0.54m)
-  - Risk: 1 to 500 years (1.2m)
-  - Mean level of water (2.0m)
-- **Water Level (m)**: Custom height -3 to 3m
+- **Preset**: Select predefined flood scenario
+  - Mean level of water (76.40m)
+  - Risk: 1 to 10 years (82.60m)
+  - Risk: 1 to 100 years (83.80m)
+  - Risk: 1 to 500 years (84.39m)
+- **Water Level (m)**: Custom height (76-110m above sea level)
 
 **Sky**
 - **Elevation**: Sun height 0-90° (4° = sunrise/sunset)
@@ -199,83 +211,120 @@ Includes:
 WislaBAT/
 ├── index.html                 # HTML entry point
 ├── main.js                    # Main application file
-├── package.json               # npm dependencies
-├── vite.config.js             # Vite configuration
+├── main.css                   # Styling
+├── LICENSE                    # MIT License
 │
-├── src/
+├── src/                       # Source modules
 │   ├── config.js              # Central configuration
 │   ├── geoUtils.js            # EPSG:2178 geospatial utilities
-│   ├── loadTerrain.js         # DEM + GLTF loading
+│   ├── loadTerrain.js         # GLTF + DEM loading
 │   ├── setupScene.js          # Three.js initialization
 │   └── setupUI.js             # GUI, water, sky, controls
 │
-├── terrain_data/
-│   ├── dem.png                # Heightmap (fallback/prototyping)
-│   ├── orto_phot.png          # Orthophoto texture
-│   └── metadata.json          # Geospatial metadata ← CONFIGURE THIS
+├── terrain_data/              # Geospatial data
+│   ├── dem.tif                # GeoTIFF heightmap (source data)
+│   ├── dem_viz.png            # Visualization texture
+│   └── metadata.json          # EPSG:2178 metadata ← CONFIGURE THIS
 │
-├── models/
-│   └── model_zeroed.glb       # Primary GLTF terrain model (Draco compressed)
+├── models/                    # 3D models
+│   ├── model_zeroed.glb       # Primary terrain (origin-centered, Draco compressed)
+│   └── model.glb              # Alternative (EPSG:2178 coordinates)
 │
-├── textures/
-│   └── waternormals.jpg       # Water normal map
+├── textures/                  # Water and PBR textures
+│   ├── waternormals.jpg       # Water normal map
+│   └── [other textures]
 │
-├── docs/
-│   └── screenshot.png         # Project screenshot
+├── images/                    # Favicons and UI assets
+│   └── favicon.ico
 │
-└── dist/                      # Production build (generated)
+└── docs/                      # Documentation
+    ├── screenshot.png         # Project screenshot
+    ├── GEOSPATIAL_SETUP.md    # Geospatial configuration guide
+    └── GEOSPATIAL_SETUP_PL.md # Polish version
 ```
 
 ## Configuration
 
-### Basic Settings - `src/config.js`
+### Basic Settings - [src/config.js](src/config.js)
 
 ```javascript
 export const CONFIG = {
   // Rendering
   renderer: {
-    toneMappingExposure: 0.5,    // Scene brightness
+    toneMappingExposure: 0.5,    // Scene brightness (0.1-2.0)
     shadowMapSize: 2048,          // Shadow quality (512/1024/2048/4096)
   },
 
   // Camera
   camera: {
-    fov: 45,                      // Field of view
-    position: { x: 30, y: 120, z: 130 },
+    fov: 45,                      // Field of view (degrees)
+    position: { x: 500, y: 500, z: 300 },
+    controls: {
+      maxPolarAngle: Math.PI * 0.495,  // Prevent camera going below ground
+      minDistance: 10.0,
+      maxDistance: 5000.0,
+    },
   },
 
   // Geospatial
   geospatial: {
-    enabled: true,                // Enable/disable geospatial mode
-    verticalExaggeration: 1.5,    // Height scaling (1.0 = true scale)
-    scaleToThreeJS: 0.001,        // 1 Three.js unit = 1km
+    enabled: true,                // Enable EPSG:2178 coordinate system
+    verticalExaggeration: 1.5,    // Vertical exaggeration only (1.0 = true scale)
+    centerAtOrigin: true,         // Center terrain at (0,0,0)
+    // Note: Horizontal coordinates use 1:1 mapping in meters
   },
 
   // Water
   water: {
     distortionScale: 3.7,         // Wave intensity
-    defaultLevel: 0.54,           // Default level (m)
+    size: 50000,                  // Water plane size
+    levelPresets: {
+      "Mean level of water": 76.40,
+      "Risk : 1 to 10 years": 82.60,
+      "Risk : 1 to 100 years": 83.80,
+      "Risk : 1 to 500 years": 84.39,
+    },
+    defaultLevel: 76.40,          // Default level (m above sea level)
   },
 
   // Lighting
   lighting: {
     sun: {
-      elevation: 4,               // Sun height (degrees)
-      azimuth: -152,              // Sun direction (degrees)
+      elevation: 4,               // Sun height (0-90°, 4° = sunrise/sunset)
+      azimuth: -152,              // Sun direction (-180° to 180°)
     },
+  },
+
+  // Terrain
+  terrain: {
+    useGLTF: true,                // Use GLTF model (primary)
+    useDEMFallback: false,        // Skip DEM fallback
+    isModelZeroed: true,          // Model centered at origin
+    autoCameraPosition: true,     // Auto-position camera based on model
+  },
+
+  // Asset paths
+  assets: {
+    terrain: "models/model_zeroed.glb",
+    heightmap: "terrain_data/dem.tif",
+    terrainTexture: "terrain_data/dem_viz.png",
+    waterNormals: "textures/waternormals.jpg",
+    terrainMetadata: "terrain_data/metadata.json",
   },
 };
 ```
 
-### Advanced - Terrain Scaling
+### Advanced - Vertical Exaggeration
 
-Adjust `scaleToThreeJS` based on terrain size:
+Adjust vertical exaggeration for better visualization:
 
-| Terrain Size | scaleToThreeJS | 1 unit = |
-|--------------|----------------|----------|
-| < 5 km       | 0.01 - 0.05    | 20-100m  |
-| 5-50 km      | 0.001 - 0.01   | 100m-1km |
-| > 50 km      | 0.0001 - 0.001 | 1-10km   |
+| Terrain Type | verticalExaggeration | Effect |
+|--------------|---------------------|--------|
+| Flat terrain | 2.0 - 5.0           | Emphasize subtle elevation changes |
+| Moderate relief | 1.5 - 2.0        | Balanced visualization (default: 1.5) |
+| Mountainous | 1.0 - 1.5            | Preserve natural proportions |
+
+Note: All horizontal coordinates use 1:1 metric mapping (no scaling).
 
 ## Data Preparation
 
@@ -283,105 +332,134 @@ Adjust `scaleToThreeJS` based on terrain size:
 
 **From GeoTIFF:**
 ```bash
-# Convert GeoTIFF → PNG (8-bit)
-gdal_translate -of PNG -scale dem.tif dem.png
+# Create visualization texture from DEM
+gdal_translate -of PNG -scale dem.tif dem_viz.png
+
+# Or with color ramp for better visualization
+gdaldem color-relief dem.tif color_ramp.txt dem_viz.png
 ```
 
 **From point cloud:**
 ```bash
-# LAS/LAZ → GeoTIFF (GDAL/PDAL)
+# LAS/LAZ → GeoTIFF (using PDAL)
 pdal pipeline pipeline.json
 ```
 
 **Requirements:**
-- Format: PNG (8-bit grayscale) or TIFF
-- Resolution: 512x512 to 2048x2048
-- Height range: normalized 0-255
+- Format: GeoTIFF for source data, PNG for visualization
+- Resolution: 512x512 to 2048x2048 recommended
+- Must include geospatial metadata (CRS, bounds)
 
-### 2. Orthophoto (texture)
+### 2. Visualization Texture
+
+The project uses `dem_viz.png` for terrain texture visualization.
 
 ```bash
-# Reduce orthophoto size to optimal dimensions
-gdal_translate -outsize 2048 2048 orthophoto.tif orthophoto.png
+# Generate from DEM with color relief
+gdal_translate -of PNG -scale dem.tif dem_viz.png
+
+# Or use orthophoto if available
+gdal_translate -outsize 2048 2048 orthophoto.tif dem_viz.png
 ```
 
 **Requirements:**
 - Format: PNG/JPG
 - Size: 1024x1024 to 4096x4096 (recommended: 2048x2048)
-- Compression: JPG quality 85-95
+- Should match DEM extent
 
-### 3. GLTF Model (optional)
+### 3. GLTF Model (Primary)
+
+The project uses `model_zeroed.glb` as the primary terrain source.
 
 **Blender workflow:**
 
-1. Import → photogrammetry (OBJ/PLY/FBX)
+1. Import photogrammetry (OBJ/PLY/FBX)
 2. Mesh cleanup:
    - Decimate modifier (target: 40-100k tris)
    - Remove doubles
    - Recalculate normals
-3. Origin → Set to lowest point
-4. Apply all transforms (Ctrl+A)
+3. **Center at origin**: Set origin to geometry center, then move to (0, 0, 0)
+4. Apply all transforms (Ctrl+A → All Transforms)
 5. Export → glTF 2.0:
+   - Format: GLB (Binary)
    - ✅ Draco compression (level 7)
    - ✅ +Y up
    - ✅ Include normals
    - ❌ Cameras/lights
 
-**Command line (gltf-transform):**
+**Command line compression (gltf-transform):**
 ```bash
 npm install -g @gltf-transform/cli
 
-gltf-transform draco input.glb output.glb \
+gltf-transform draco model.glb model_zeroed.glb \
   --compression 7 \
   --quantize-position 14 \
   --quantize-normal 10
 ```
 
-**Target:** < 20MB for GitHub Pages
+**Target size:** < 50MB (model_zeroed.glb is ~40MB)
 
 ## Deployment
 
 ### GitHub Pages
 
+The project is a static website - no build process needed!
+
 ```bash
-# 1. Build project
-npm run build
+# 1. Push to GitHub repository
+git add .
+git commit -m "Update project"
+git push origin main
 
-# 2. Deploy to gh-pages branch
-npm run deploy   # if configured
+# 2. Enable GitHub Pages in repository settings
+# Settings → Pages → Source: Deploy from branch
+# Branch: main → / (root)
 
-# OR manually:
-git add dist -f
-git commit -m "Build"
-git subtree push --prefix dist origin gh-pages
+# 3. Your site will be available at:
+# https://yourusername.github.io/WislaBAT/
+```
+
+**Alternative: Deploy from gh-pages branch**
+```bash
+# Create orphan gh-pages branch with project files
+git checkout --orphan gh-pages
+git add .
+git commit -m "Deploy to GitHub Pages"
+git push origin gh-pages
+
+# Then enable in Settings → Pages → Branch: gh-pages
 ```
 
 ### Custom Server
 
-```bash
-# Build
-npm run build
+Simply upload all project files to any web server:
 
-# Output in /dist is ready to copy to HTTP server
+```bash
+# The entire project directory is ready to deploy
+# No build process required
 # Apache/Nginx/Cloudflare Pages/Netlify/Vercel
 ```
 
+**Requirements:**
+- Server must serve files over HTTP/HTTPS
+- No special server configuration needed
+- CORS enabled if loading external resources
+
 ## Development
 
-### Running Dev Server
+### Project Architecture
 
-```bash
-npm run dev          # Start dev server (port 5173)
-npm run build        # Production build
-npm run preview      # Preview production build
-```
+- **No build process**: Pure ES6 modules loaded via browser
+- **CDN dependencies**: Three.js r170 loaded from jsdelivr
+- **Modular structure**: Each file has one clear responsibility
+- **Configuration-driven**: All settings in [src/config.js](src/config.js)
 
 ### Adding Features
 
 ```javascript
-// 1. Create new module
+// 1. Create new module in src/
 // src/myFeature.js
-export function myFeature() {
+export function myFeature(scene, camera) {
   // implementation
 }
 
@@ -390,33 +468,34 @@ import { myFeature } from './src/myFeature.js';
 
 // 3. Use in init()
 async function init() {
-  // ...
-  myFeature();
+  // ... existing code
+  myFeature(app.scene, app.camera);
 }
 ```
 
 ### Code Structure
 
 - **Modular**: Each file = one responsibility
-- **ES6+**: Import/export, async/await, arrow functions
-- **Configuration**: All constants in `src/config.js`
+- **ES6+**: Native modules, async/await, arrow functions
+- **No transpilation**: Modern browser features only
+- **Configuration**: Central config in [src/config.js](src/config.js)
 - **Comments**: JSDoc for public APIs
 
 ### Naming Conventions
 
 ```javascript
-// Files
-setupScene.js       // camelCase
+// Files: camelCase
+setupScene.js
 geoUtils.js
 
-// Functions/variables
+// Functions/variables: camelCase
 function loadTerrain() {}
 const terrainMesh = ...
 
-// Classes (if used)
+// Classes: PascalCase
 class GeoTransform {}
 
-// Constants
+// Constants: UPPER_SNAKE_CASE
 const TERRAIN_SEGMENTS = 256;
 ```
 
@@ -424,50 +503,65 @@ const TERRAIN_SEGMENTS = 256;
 
 ### Terrain not loading
 
-**Problem:** Black screen, no terrain in console
+**Problem:** Black screen, no terrain visible
 
 **Solution:**
-1. Check browser console (F12)
-2. Verify paths in `src/config.js`:
+1. Check browser console (F12) for errors
+2. Ensure you're running from a local web server (not file://)
+3. Verify paths in [src/config.js](src/config.js:76):
    ```javascript
    assets: {
-     heightmap: "terrain_data/dem.png",  // path relative to public/
+     terrain: "models/model_zeroed.glb",
+     heightmap: "terrain_data/dem.tif",
    }
    ```
-3. Ensure files are in correct folders
+4. Check if model file exists: `models/model_zeroed.glb` (~40MB)
+5. Verify Draco decoder is accessible (check Network tab)
 
 ### Coordinates show wrong values
 
-**Problem:** EPSG:2178 coordinates out of range for Poland
+**Problem:** EPSG:2178 coordinates out of range for Poland (should be 600000-800000 for X, 400000-800000 for Y)
 
 **Solution:**
-1. Check `terrain_data/metadata.json` - bounds must be in EPSG:2178 (meters)
-2. Use `gdalinfo` to verify source GeoTIFF CRS
+1. Check [terrain_data/metadata.json](terrain_data/metadata.json) - bounds must be in EPSG:2178 (meters)
+2. Use `gdalinfo dem.tif` to verify source GeoTIFF CRS
 3. If data is in different system, convert:
    ```bash
    gdalwarp -s_srs EPSG:4326 -t_srs EPSG:2178 input.tif output.tif
+   ```
+4. Extract metadata from converted file:
+   ```bash
+   gdalinfo dem.tif
+   # Update bounds in metadata.json
    ```
 
 ### Poor performance (low FPS)
 
 **Solution:**
-1. Reduce `shadowMapSize` in config.js (2048 → 1024)
-2. Limit `TERRAIN_SEGMENTS` in loadTerrain.js (256 → 128)
-3. Disable shadows:
+1. Reduce `shadowMapSize` in [src/config.js](src/config.js:9) (2048 → 1024 or 512)
+2. Disable shadows in [src/setupScene.js](src/setupScene.js):
    ```javascript
    renderer.shadowMap.enabled = false;
    ```
-4. Reduce texture resolution (4096 → 2048px)
+3. Reduce water plane size in [src/config.js](src/config.js:33):
+   ```javascript
+   water: { size: 10000 }  // reduce from 50000
+   ```
+4. Optimize model: reduce triangle count in Blender (Decimate modifier)
+5. Reduce texture resolution: compress `dem_viz.png` to 1024x1024
 
 ### Water is invisible
 
 **Solution:**
-1. Check if `waterLevel > terrain_elevation`
-2. Verify `waternormals.jpg` loading:
-   - Open console → Network → check for 404 errors
-3. Increase `water.size` if terrain is large:
+1. Check water level in GUI - must be above terrain elevation
+   - Current terrain: 76-107m above sea level
+   - Default water level: 76.40m (adjust in GUI)
+2. Verify `waternormals.jpg` loaded:
+   - Open console (F12) → Network tab → check for 404 errors
+   - File should be at `textures/waternormals.jpg`
+3. Increase `water.size` if terrain is very large:
    ```javascript
-   water: { size: 10000 }  // in src/config.js
+   water: { size: 100000 }  // in src/config.js
    ```
 
 ### GLTF model won't load
@@ -475,13 +569,16 @@ const TERRAIN_SEGMENTS = 256;
 **Problem:** "Failed to load GLTF" in console
 
 **Solution:**
-1. Check if `CONFIG.useGLTF = true` in config.js
-2. Verify path: `models/terrain.glb`
-3. Ensure Draco decoder is available:
+1. Verify file exists: `models/model_zeroed.glb` (should be ~40MB)
+2. Check config in [src/config.js](src/config.js:84):
+   ```javascript
+   terrain: { useGLTF: true }
    ```
-   https://www.gstatic.com/draco/versioned/decoders/1.5.6/
-   ```
-4. Test connection: open URL in browser
+3. Ensure running from web server (not `file://`)
+4. Check Draco decoder accessibility:
+   - URL: `https://www.gstatic.com/draco/versioned/decoders/1.5.6/`
+   - Test in browser Network tab
+5. Verify browser console for specific error messages
 
 ## Technical Documentation
 
@@ -553,22 +650,30 @@ geo.toSceneElevation(elevation) → sceneY
 
 ## Technologies
 
-- **[Three.js r170](https://threejs.org/)** - WebGL rendering engine
-- **[Vite 5.x](https://vitejs.dev/)** - Build tool and dev server
-- **[lil-gui](https://lil-gui.georgealgo.com/)** - Lightweight GUI
-- **[Draco](https://github.com/google/draco)** - Mesh compression
-- **[GDAL](https://gdal.org/)** - Geospatial data processing
+- **[Three.js r170](https://threejs.org/)** - WebGL rendering engine (via CDN)
+- **[lil-gui](https://lil-gui.georgealgo.com/)** - Lightweight GUI (bundled with Three.js)
+- **[Draco](https://github.com/google/draco)** - Mesh compression (Google CDN)
+- **[GDAL](https://gdal.org/)** - Geospatial data processing (for data preparation)
+- **ES6 Modules** - Native browser module system (no bundler needed)
 
 ## Browser Support
 
-| Browser | Minimum Version | Status |
-|---------|-----------------|--------|
-| Chrome  | 90+             | ✅ Tested |
-| Firefox | 88+             | ✅ Tested |
-| Safari  | 15+             | ✅ Compatible |
-| Edge    | 90+             | ✅ Tested |
+| Browser | Minimum Version | Status | Notes |
+|---------|-----------------|--------|-------|
+| Chrome  | 90+ (2021)      | ✅ Tested | Recommended |
+| Firefox | 88+ (2021)      | ✅ Tested | Full support |
+| Safari  | 15+ (2021)      | ✅ Compatible | iOS 15+ |
+| Edge    | 90+ (2021)      | ✅ Tested | Chromium-based |
 
-**Requirements:** WebGL 2.0, ES6 modules
+**Requirements:**
+- WebGL 2.0 support
+- ES6 modules (import/export)
+- Modern JavaScript features (async/await, arrow functions)
+
+**Not supported:**
+- Internet Explorer (any version)
+- Legacy Edge (EdgeHTML)
+- Old mobile browsers (< 2021)
 
 ## Roadmap
 
@@ -595,20 +700,23 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## Authors
 
-**WislaBAT** - Flood visualization tool from UAV photogrammetry
+**WislaBAT** - Interactive flood visualization tool from UAV photogrammetry
 
-The project was created as part of research on the application of drone photogrammetry in flood hazard analysis.
+The project was created as part of research on the application of drone photogrammetry in flood hazard analysis and geospatial data visualization.
+
+**Repository:** [https://github.com/Judosik/WislaBAT](https://github.com/Judosik/WislaBAT)
 
 ## Citation
 
 If you use this project in scientific research, please cite:
 
 ```bibtex
-@software{wislabat2024,
-  title={WislaBAT: 3D Flood Visualization Tool},
-  author={[Your Name]},
-  year={2024},
-  url={https://github.com/Judosik/WislaBAT}
+@software{wislabat2025,
+  title={WislaBAT: 3D Terrain and Water Level Visualization},
+  author={Judosik},
+  year={2025},
+  url={https://github.com/Judosik/WislaBAT},
+  note={Interactive WebGL visualization tool for flood scenarios using photogrammetric data}
 }
 ```
 

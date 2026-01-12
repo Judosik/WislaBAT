@@ -6,7 +6,6 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Three.js](https://img.shields.io/badge/Three.js-r170-blue.svg)](https://threejs.org/)
-[![Vite](https://img.shields.io/badge/Vite-5.x-646CFF.svg)](https://vitejs.dev/)
 
 ![WislaBAT Screenshot](docs/screenshot.png)
 
@@ -42,7 +41,7 @@
 ## Funkcje
 
 ### 🌍 Wsparcie geoprzestrzenne
-- ✅ Pełna obsługa EPSG:2178 (Polish CS92) z metrycznym skalowaniem
+- ✅ Pełna obsługa EPSG:2178 (Polish CS92) z mapowaniem 1:1 w metrach
 - ✅ Automatyczne wczytywanie metadanych z GeoTIFF
 - ✅ Interaktywne wyświetlanie współrzędnych w czasie rzeczywistym
 - ✅ Konwersja współrzędnych scena ↔ układ odniesienia
@@ -79,8 +78,8 @@
 
 ### Wymagania
 
-- **Node.js** >= 18.0.0
-- **npm** >= 9.0.0
+- **Nowoczesna przeglądarka** z obsługą WebGL 2.0 (Chrome 90+, Firefox 88+, Safari 15+, Edge 90+)
+- **Lokalny serwer WWW** (Python, Node.js http-server, VS Code Live Server, lub dowolny serwer HTTP)
 - **GDAL** (opcjonalnie, do ekstrakcji metadanych GeoTIFF)
 
 ### Kroki instalacji
@@ -90,23 +89,36 @@
 git clone https://github.com/Judosik/WislaBAT.git
 cd WislaBAT
 
-# 2. Zainstaluj zależności
-npm install
+# 2. Uruchom lokalny serwer WWW (wybierz jedną metodę):
 
-# 3. Uruchom serwer deweloperski
-npm run dev
+# Opcja A: Python 3
+python -m http.server 8000
 
-# 4. Otwórz przeglądarkę
-# http://localhost:5173
+# Opcja B: Python 2
+python -m SimpleHTTPServer 8000
+
+# Opcja C: Node.js http-server (zainstaluj najpierw: npm install -g http-server)
+http-server -p 8000
+
+# Opcja D: Rozszerzenie VS Code Live Server
+# Kliknij prawym przyciskiem na index.html → "Open with Live Server"
+
+# 3. Otwórz przeglądarkę
+# http://localhost:8000
 ```
 
 ### Weryfikacja instalacji
 
-Po uruchomieniu powinieneś zobaczyć w konsoli:
+Po otwarciu w przeglądarce sprawdź konsolę (F12):
 
 ```
+Inicjowanie sceny...
+Przetwarzanie terenu...
+Loading GLTF terrain model...
+✓ Geospatial metadata loaded
+✓ GLTF terrain loaded (zeroed model)
+✓ Camera positioned automatically
 ✓ Initialization complete
-✓ Geospatial metadata loaded (jeśli skonfigurowane)
 ```
 
 ## Konfiguracja danych geoprzestrzennych
@@ -247,8 +259,9 @@ export const CONFIG = {
   // Geoprzestrzenne
   geospatial: {
     enabled: true,                // Włącz/wyłącz tryb geoprzestrzenny
-    verticalExaggeration: 1.5,    // Przeskalowanie wysokości (1.0 = true scale)
-    scaleToThreeJS: 0.001,        // 1 Three.js unit = 1km
+    verticalExaggeration: 1.5,    // Przesada pionowa (1.0 = prawdziwa skala)
+    centerAtOrigin: true,         // Wyśrodkuj teren w punkcie (0,0,0)
+    // Uwaga: Współrzędne poziome używają mapowania 1:1 w metrach
   },
 
   // Woda
@@ -267,15 +280,17 @@ export const CONFIG = {
 };
 ```
 
-### Zaawansowane - Skalowanie terenu
+### Zaawansowane - Przesada pionowa
 
-Dostosuj `scaleToThreeJS` w zależności od rozmiaru terenu:
+Dostosuj przesadę pionową dla lepszej wizualizacji:
 
-| Rozmiar terenu | scaleToThreeJS | 1 unit = |
-|----------------|----------------|----------|
-| < 5 km         | 0.01 - 0.05    | 20-100m  |
-| 5-50 km        | 0.001 - 0.01   | 100m-1km |
-| > 50 km        | 0.0001 - 0.001 | 1-10km   |
+| Typ terenu | verticalExaggeration | Efekt |
+|------------|---------------------|-------|
+| Płaski teren | 2.0 - 5.0         | Podkreśl subtelne zmiany wysokości |
+| Umiarkowane wzniesienia | 1.5 - 2.0 | Zbalansowana wizualizacja (domyślnie: 1.5) |
+| Górzysty | 1.0 - 1.5            | Zachowaj naturalne proporcje |
+
+Uwaga: Wszystkie współrzędne poziome używają mapowania 1:1 w metrach (bez skalowania).
 
 ## Przygotowanie danych
 

@@ -105,20 +105,17 @@ geospatial: {
   // Wycentruj teren w początku układu (zalecane dla Three.js)
   centerAtOrigin: true,
 
-  // Współczynnik skali: 1 jednostka Three.js = X metrów
-  // 0.001 = 1 jednostka Three.js = 1km (dobre dla dużych obszarów)
-  // 0.01  = 1 jednostka Three.js = 100m (średnie obszary)
-  scaleToThreeJS: 0.001,
+  // Uwaga: Wszystkie współrzędne poziome używają mapowania 1:1 w metrach
+  // Tylko oś pionowa używa przesady dla wizualizacji
 }
 ```
 
-### Zalecenia dotyczące skalowania
+### Mapowanie współrzędnych
 
-| Rozmiar terenu | scaleToThreeJS | Odległość kamery |
-|----------------|----------------|------------------|
-| < 5km          | 0.01 - 0.05    | 50-200           |
-| 5-50km         | 0.001 - 0.01   | 100-300          |
-| > 50km         | 0.0001 - 0.001 | 200-500          |
+System używa **mapowania 1:1 w metrach** dla wszystkich współrzędnych poziomych:
+- 1 metr w EPSG:2178 = 1 metr w scenie Three.js
+- Nie stosuje się skalowania poziomego
+- Tylko przesada pionowa jest używana (domyślnie: 1.5x)
 
 ---
 
@@ -139,9 +136,10 @@ GeoTransform initialized: {
 Przesuń mysz nad teren - powinieneś zobaczyć:
 ```
 EPSG:2178 Coordinates
-X: 665432.12m E, Y: 495123.45m N
+X: 665432.12m N, Y: 495123.45m E
 Elevation: 45.23 m
 ```
+Uwaga: X = Northing (oś północ-południe), Y = Easting (oś wschód-zachód)
 
 ---
 
@@ -155,8 +153,8 @@ Elevation: 45.23 m
 - **False Northing**: -5,300,000m
 
 Typowe zakresy współrzędnych dla Polski:
-- **X (Easting)**: 470,000 - 860,000
-- **Y (Northing)**: 180,000 - 810,000
+- **X (Northing)**: 180,000 - 810,000  (oś północ-południe)
+- **Y (Easting)**: 470,000 - 860,000   (oś wschód-zachód)
 
 ---
 
@@ -168,11 +166,14 @@ Dostosuj `verticalExaggeration` w [config.js](src/config.js#L86):
 verticalExaggeration: 2.0,  // Wypróbuj różne wartości
 ```
 
-### Teren wydaje się za mały/za duży
-Dostosuj `scaleToThreeJS` w [config.js](src/config.js#L91):
+### Kamera jest za daleko lub za blisko
+Dostosuj początkową pozycję kamery w [config.js](src/config.js):
 ```javascript
-scaleToThreeJS: 0.001,  // Większa wartość = mniejszy teren
+camera: {
+  position: { x: 500, y: 500, z: 300 },  // Dostosuj w zależności od rozmiaru terenu
+}
 ```
+Uwaga: Wszystkie współrzędne używają mapowania 1:1 w metrach (bez skalowania).
 
 ### Współrzędne pokazują błędne wartości
 1. Zweryfikuj, że `bounds` w [metadata.json](terrain_data/metadata.json) pasują do wyniku `gdalinfo`

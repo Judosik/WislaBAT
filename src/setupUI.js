@@ -222,8 +222,9 @@ export function setupCoordinateDisplay(camera, terrain, container) {
       const elevation = point.y / CONFIG.geospatial.verticalExaggeration;
 
       // Update display
+      // geoCoords: x = northing, y = easting
       document.getElementById("coord-xy").textContent =
-        `X: ${geoCoords.x.toFixed(2)}m E, Y: ${geoCoords.y.toFixed(2)}m N`;
+        `X: ${geoCoords.x.toFixed(2)}m N, Y: ${geoCoords.y.toFixed(2)}m E`;
       document.getElementById("coord-elev").textContent =
         `Elevation: ${elevation.toFixed(2)} m`;
     }

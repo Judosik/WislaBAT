@@ -94,9 +94,8 @@ export const CONFIG = {
     verticalExaggeration: 1.5,
     // Center the terrain at origin for better Three.js handling
     centerAtOrigin: true,
-    // Scale factor to convert from CRS units to Three.js units
-    // For EPSG:2178 (meters), using 1:1000 scale (1 Three.js unit = 1km)
-    scaleToThreeJS: 0.001,
+    // Note: All horizontal coordinates use 1:1 mapping in meters
+    // Only vertical axis uses exaggeration for better visualization
   },
 
   // Heightmap-specific settings (fallback if GLTF not used)

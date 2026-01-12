@@ -13,65 +13,67 @@ export class GeoTransform {
     this.bounds = metadata.bounds;
 
     // Calculate terrain dimensions in real-world units (meters for EPSG:2178)
-    this.width = this.bounds.maxX - this.bounds.minX;
-    this.height = this.bounds.maxY - this.bounds.minY;
+    // In EPSG:2178: X = northing (north-south), Y = easting (east-west)
+    this.width = this.bounds.maxX - this.bounds.minX;  // North-south extent
+    this.height = this.bounds.maxY - this.bounds.minY; // East-west extent
 
     // Center point in real-world coordinates
-    this.centerX = (this.bounds.minX + this.bounds.maxX) / 2;
-    this.centerY = (this.bounds.minY + this.bounds.maxY) / 2;
+    this.centerX = (this.bounds.minX + this.bounds.maxX) / 2; // Center northing
+    this.centerY = (this.bounds.minY + this.bounds.maxY) / 2; // Center easting
 
-    // Scale factors
-    this.scaleToThreeJS = CONFIG.geospatial.scaleToThreeJS;
+    // Vertical exaggeration only (no horizontal scaling)
     this.verticalExaggeration = CONFIG.geospatial.verticalExaggeration;
-
-    // Three.js terrain dimensions
-    this.terrainWidthThreeJS = this.width * this.scaleToThreeJS;
-    this.terrainHeightThreeJS = this.height * this.scaleToThreeJS;
 
     console.log("GeoTransform initialized:", {
       crs: metadata.crs,
-      realWorldSize: `${this.width}m × ${this.height}m`,
-      threeJSSize: `${this.terrainWidthThreeJS.toFixed(1)} × ${this.terrainHeightThreeJS.toFixed(1)}`,
-      center: `(${this.centerX}, ${this.centerY})`,
+      size: `${this.width}m × ${this.height}m`,
+      center: `(${this.centerX.toFixed(1)}, ${this.centerY.toFixed(1)})`,
+      verticalExaggeration: this.verticalExaggeration,
     });
   }
 
   /**
    * Convert EPSG:2178 coordinates to Three.js scene coordinates
-   * @param {number} x - EPSG:2178 X coordinate (easting)
-   * @param {number} y - EPSG:2178 Y coordinate (northing)
+   * @param {number} x - EPSG:2178 X coordinate (northing - increases northward)
+   * @param {number} y - EPSG:2178 Y coordinate (easting - increases eastward)
    * @returns {{x: number, z: number}} Three.js position (y is elevation)
+   *
+   * Mapping: EPSG:2178 X (north) → Three.js -Z, EPSG:2178 Y (east) → Three.js +X
+   * All coordinates are in meters, 1:1 mapping, NO SCALING
    */
   toSceneCoords(x, y) {
     if (CONFIG.geospatial.centerAtOrigin) {
       return {
-        x: (x - this.centerX) * this.scaleToThreeJS,
-        z: -(y - this.centerY) * this.scaleToThreeJS, // Negative Z for north = -Z
+        x: y - this.centerY,   // East → Three.js +X (meters)
+        z: -(x - this.centerX), // North → Three.js -Z (meters)
       };
     } else {
       return {
-        x: (x - this.bounds.minX) * this.scaleToThreeJS,
-        z: -(y - this.bounds.minY) * this.scaleToThreeJS,
+        x: y - this.bounds.minY,   // East → Three.js +X (meters)
+        z: -(x - this.bounds.minX), // North → Three.js -Z (meters)
       };
     }
   }
 
   /**
    * Convert Three.js scene coordinates back to EPSG:2178
-   * @param {number} sceneX - Three.js X coordinate
-   * @param {number} sceneZ - Three.js Z coordinate
-   * @returns {{x: number, y: number}} EPSG:2178 coordinates
+   * @param {number} sceneX - Three.js X coordinate (meters)
+   * @param {number} sceneZ - Three.js Z coordinate (meters)
+   * @returns {{x: number, y: number}} EPSG:2178 coordinates (x=northing, y=easting)
+   *
+   * Mapping: Three.js +X → EPSG:2178 Y (east), Three.js -Z → EPSG:2178 X (north)
+   * All coordinates are in meters, 1:1 mapping, NO SCALING
    */
   toGeoCoords(sceneX, sceneZ) {
     if (CONFIG.geospatial.centerAtOrigin) {
       return {
-        x: sceneX / this.scaleToThreeJS + this.centerX,
-        y: -sceneZ / this.scaleToThreeJS + this.centerY,
+        x: -sceneZ + this.centerX, // Three.js -Z → North (meters)
+        y: sceneX + this.centerY,  // Three.js +X → East (meters)
       };
     } else {
       return {
-        x: sceneX / this.scaleToThreeJS + this.bounds.minX,
-        y: -sceneZ / this.scaleToThreeJS + this.bounds.minY,
+        x: -sceneZ + this.bounds.minX, // Three.js -Z → North (meters)
+        y: sceneX + this.bounds.minY,  // Three.js +X → East (meters)
       };
     }
   }
@@ -79,10 +81,10 @@ export class GeoTransform {
   /**
    * Convert elevation from real-world meters to Three.js units
    * @param {number} elevation - Elevation in meters
-   * @returns {number} Three.js Y coordinate
+   * @returns {number} Three.js Y coordinate (meters, with vertical exaggeration applied)
    */
   toSceneElevation(elevation) {
-    return elevation * this.scaleToThreeJS * this.verticalExaggeration;
+    return elevation * this.verticalExaggeration;
   }
 
   /**
@@ -91,17 +93,17 @@ export class GeoTransform {
    * @returns {number} Elevation in meters
    */
   toGeoElevation(sceneY) {
-    return sceneY / (this.scaleToThreeJS * this.verticalExaggeration);
+    return sceneY / this.verticalExaggeration;
   }
 
   /**
-   * Get terrain dimensions for Three.js geometry
-   * @returns {{width: number, height: number}} Dimensions in Three.js units
+   * Get terrain dimensions in meters
+   * @returns {{width: number, height: number}} Dimensions in meters
    */
   getTerrainDimensions() {
     return {
-      width: this.terrainWidthThreeJS,
-      height: this.terrainHeightThreeJS,
+      width: this.width,
+      height: this.height,
     };
   }
 
@@ -137,12 +139,12 @@ export async function loadTerrainMetadata() {
 
 /**
  * Format EPSG:2178 coordinates for display
- * @param {number} x - Easting
- * @param {number} y - Northing
+ * @param {number} x - Northing (north-south coordinate)
+ * @param {number} y - Easting (east-west coordinate)
  * @returns {string} Formatted coordinate string
  */
 export function formatEPSG2178(x, y) {
-  return `${x.toFixed(2)}E, ${y.toFixed(2)}N`;
+  return `${x.toFixed(2)}N, ${y.toFixed(2)}E`;
 }
 
 // Legacy export for backwards compatibility

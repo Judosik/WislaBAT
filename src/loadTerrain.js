@@ -91,7 +91,9 @@ async function loadGLTFTerrain() {
 
               // Convert from EPSG:2178 to scene coordinates
               // GLTF uses: +X = East, +Y = Up, +Z = South (negated North)
-              const sceneCoords = geoTransform.toSceneCoords(worldPos.x, -worldPos.z);
+              // EPSG:2178: X = Northing, Y = Easting, Z = Up
+              // Map: GLTF X (east) → EPSG Y, GLTF -Z (north) → EPSG X, GLTF Y → elevation
+              const sceneCoords = geoTransform.toSceneCoords(-worldPos.z, worldPos.x);
               const sceneElevation = geoTransform.toSceneElevation(worldPos.y);
 
               // Update position
@@ -133,7 +135,8 @@ async function loadGLTFTerrain() {
                 const worldPos = child.position.clone();
 
                 // Transform to scene coordinates (centered at origin)
-                const sceneCoords = geoTransform.toSceneCoords(worldPos.x, -worldPos.z);
+                // GLTF X (east) → EPSG Y, GLTF -Z (north) → EPSG X
+                const sceneCoords = geoTransform.toSceneCoords(-worldPos.z, worldPos.x);
 
                 // Set position: X,Z transformed, Y (elevation) kept as-is
                 child.position.set(sceneCoords.x, worldPos.y, sceneCoords.z);
