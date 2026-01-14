@@ -7,7 +7,7 @@ const TERRAIN_SEGMENTS = 256;
 // Global geospatial transform (initialized during load)
 let geoTransform = null;
 
-export async function loadTerrain(scene) {
+export async function loadTerrain(scene, progressCallback = null) {
   // 1. Load metadata if geospatial mode is enabled
   if (CONFIG.geospatial.enabled) {
     try {
@@ -26,7 +26,7 @@ export async function loadTerrain(scene) {
   if (CONFIG.terrain?.useGLTF) {
     // Load GLTF as primary source
     console.log("Loading GLTF terrain model...");
-    terrain = await loadGLTFTerrain();
+    terrain = await loadGLTFTerrain(progressCallback);
     scene.add(terrain);
   } else {
     // Legacy approach: Load DEM first
@@ -53,8 +53,9 @@ export function getGeoTransform() {
 /**
  * Load GLTF terrain model as primary source
  * Handles coordinate transformation from EPSG:2178 to Three.js space
+ * @param {function} progressCallback - Optional callback for loading progress (0-100)
  */
-async function loadGLTFTerrain() {
+async function loadGLTFTerrain(progressCallback = null) {
   // Dynamic imports
   const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
   const { DRACOLoader } = await import("three/addons/loaders/DRACOLoader.js");
@@ -172,6 +173,11 @@ async function loadGLTFTerrain() {
       (progress) => {
         const percent = (progress.loaded / progress.total) * 100;
         console.log(`Loading GLTF: ${percent.toFixed(1)}%`);
+
+        // Call external progress callback if provided
+        if (progressCallback) {
+          progressCallback(percent);
+        }
       },
       (error) => {
         console.error("Failed to load GLTF terrain:", error);

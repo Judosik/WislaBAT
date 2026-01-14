@@ -7,12 +7,15 @@ import { loadTerrain, setCameraForModel } from "./src/loadTerrain.js";
 import {
   createWater,
   createSky,
+  createWaterAsync,
+  createSkyAsync,
   setupControls,
   setupGUI,
   updateWater,
   updateSun,
   setupCoordinateDisplay,
 } from "./src/setupUI.js";
+import { LoadingScreen } from "./src/loadingScreen.js";
 
 // Global objects
 let app = {
@@ -30,77 +33,101 @@ let app = {
 };
 
 /**
- * Main initialization
+ * Main initialization with loading progress
  */
 async function init() {
   const container = document.getElementById("container");
 
-  // Step 1: Setup core Three.js
-  console.log("Inicjowanie sceny...");
-  const sceneSetup = setupScene(container);
-  app.scene = sceneSetup.scene;
-  app.camera = sceneSetup.camera;
-  app.renderer = sceneSetup.renderer;
-  app.directionalLight = sceneSetup.directionalLight;
-  app.sun = sceneSetup.sun;
+  // Create loading screen
+  const loader = new LoadingScreen();
 
-  // Step 2: Load terrain
-  console.log("Przetwarzanie terenu...");
   try {
-    app.terrain = await loadTerrain(app.scene);
+    // Step 1: Setup scene (0% → 5%)
+    loader.update(0, 'Initializing scene...');
+    const sceneSetup = setupScene(container);
+    app.scene = sceneSetup.scene;
+    app.camera = sceneSetup.camera;
+    app.renderer = sceneSetup.renderer;
+    app.directionalLight = sceneSetup.directionalLight;
+    app.sun = sceneSetup.sun;
+    loader.update(5, 'Scene initialized');
 
-    // Auto-position camera based on model bounds
+    // Step 2: Load terrain (5% → 75%)
+    loader.update(5, 'Loading terrain model...');
+    app.terrain = await loadTerrain(app.scene, (progress) => {
+      // Map GLTF progress (0-100) to our range (5-75)
+      const percent = 5 + (progress * 0.70);
+      loader.update(percent, `Loading terrain model... ${Math.round(progress)}%`);
+    });
+
     const cameraTarget = setCameraForModel(app.camera, app.terrain);
     if (cameraTarget) {
-      // Store target for later use with controls
       app.cameraTarget = cameraTarget;
     }
+    loader.update(75, 'Terrain loaded');
+
+    // Step 3: Setup geospatial (75% → 80%)
+    loader.update(75, 'Applying coordinate transforms...');
+    // (already done in loadTerrain)
+    loader.update(80, 'Geospatial setup complete');
+
+    // Step 4: Create water (80% → 90%)
+    loader.update(80, 'Creating water surface...');
+    app.water = await createWaterAsync();
+    app.scene.add(app.water);
+    loader.update(90, 'Water created');
+
+    // Step 5: Create sky (90% → 95%)
+    loader.update(90, 'Creating sky...');
+    app.sky = await createSkyAsync();
+    app.scene.add(app.sky);
+    loader.update(95, 'Sky created');
+
+    // Step 6: Setup controls (95% → 97%)
+    loader.update(95, 'Setting up controls...');
+    app.controls = setupControls(app.camera, app.renderer);
+    if (app.cameraTarget) {
+      app.controls.target.copy(app.cameraTarget);
+      app.controls.update();
+    }
+    setupWindowResize(app.camera, app.renderer);
+    loader.update(97, 'Controls ready');
+
+    // Step 7: Setup UI (97% → 100%)
+    loader.update(97, 'Setting up UI...');
+    const { gui, stats } = setupGUI(
+      parameters,
+      app.water,
+      app.sky,
+      app.directionalLight,
+      app.sun,
+      container
+    );
+    app.stats = stats;
+
+    if (CONFIG.geospatial?.enabled) {
+      setupCoordinateDisplay(app.camera, app.terrain, container);
+    }
+
+    // Initial sun position
+    updateSun(app.sun, app.sky, app.water, app.directionalLight, parameters);
+
+    loader.update(100, 'Complete!');
+
+    // Hide loading screen after brief delay
+    setTimeout(() => {
+      loader.hide();
+    }, 500);
+
+    console.log("✓ Initialization complete");
+
+    // Start animation loop
+    app.renderer.setAnimationLoop(animate);
+
   } catch (error) {
-    console.error("Terrain loading failed:", error);
+    console.error('Initialization failed:', error);
+    loader.update(0, 'Error: ' + error.message);
   }
-
-  // Step 3: Create water and sky
-  console.log("Creating water and sky...");
-  app.water = createWater();
-  app.scene.add(app.water);
-
-  app.sky = createSky();
-  app.scene.add(app.sky);
-
-  // Step 4: Setup controls
-  console.log("Setting up controls...");
-  app.controls = setupControls(app.camera, app.renderer);
-
-  // Update controls target if we have one from camera positioning
-  if (app.cameraTarget) {
-    app.controls.target.copy(app.cameraTarget);
-    app.controls.update();
-  }
-
-  setupWindowResize(app.camera, app.renderer);
-
-  // Step 5: Setup GUI and stats
-  console.log("Setting up UI...");
-  const { gui, stats } = setupGUI(
-    parameters,
-    app.water,
-    app.sky,
-    app.directionalLight,
-    app.sun,
-    container
-  );
-  app.stats = stats;
-
-  // Step 6: Setup coordinate display (if geospatial mode enabled)
-  setupCoordinateDisplay(app.camera, app.terrain, container);
-
-  // Initial sun position
-  updateSun(app.sun, app.sky, app.water, app.directionalLight, parameters);
-
-  console.log("✓ Initialization complete");
-
-  // Start animation loop
-  app.renderer.setAnimationLoop(animate);
 }
 
 /**

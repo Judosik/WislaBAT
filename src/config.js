@@ -64,8 +64,8 @@ export const CONFIG = {
       shadowCameraSize: 500,
     },
     sun: {
-      elevation: 4, // degrees
-      azimuth: -152, // degrees
+      elevation: 44.6, // degrees
+      azimuth: -28, // degrees
     },
   },
 

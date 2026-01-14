@@ -234,3 +234,29 @@ export function setupCoordinateDisplay(camera, terrain, container) {
 
   return coordPanel;
 }
+
+/**
+ * Create water mesh asynchronously (non-blocking)
+ * Yields control to allow progress bar updates
+ */
+export async function createWaterAsync() {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      const water = createWater();
+      resolve(water);
+    });
+  });
+}
+
+/**
+ * Create sky mesh asynchronously (non-blocking)
+ * Yields control to allow progress bar updates
+ */
+export async function createSkyAsync() {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      const sky = createSky();
+      resolve(sky);
+    });
+  });
+}
